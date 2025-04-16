@@ -1,7 +1,9 @@
 import React from "react";
+// import { BrowserRouter, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
 import GlobalStyle from "./styles/globalStyles";
 import Home from "./pages/home/Home";
+import SelectQuestion from "./pages/selectQuestion/SelectQuestion";
 
 const AppContainer = styled.div`
   width: 100%;
@@ -16,7 +18,7 @@ function App() {
     <>
       <GlobalStyle />
       <AppContainer>
-        <Home />
+        <SelectQuestion /> {/* 일단은 라우터 안 넣고 이렇게 했슴다 */}
       </AppContainer>
     </>
   );
