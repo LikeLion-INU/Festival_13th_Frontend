@@ -59,10 +59,10 @@ const LottieContainer = styled.div`
 
 const TitleImage = styled.img`
   position: absolute;
-  top: 15%;
+  top: 25%;
   z-index: 2;
   animation: ${fadeIn} 1s ease forwards;
-  animation-delay: 1s;
+  animation-delay: 2s;
   opacity: 0;
   max-width: 70%;
   height: auto;
@@ -73,7 +73,7 @@ const TitleImage = styled.img`
   }
 
   @media (max-width: 480px) {
-    top: 10%;
+    top: 25%;
     max-width: 50%;
   }
 `;
@@ -130,6 +130,7 @@ const InputContainer = styled.div`
 `;
 
 const Label = styled.label`
+  text-align: center;
   font-size: 1rem;
   color: #333;
   margin-bottom: 0.2rem;
@@ -206,7 +207,7 @@ const ButtonContainer = styled.div`
   position: absolute;
   bottom: 5%;
   animation: ${fadeIn} 1s ease forwards;
-  animation-delay: 0.5s;
+  animation-delay: 3s;
   opacity: 0;
   z-index: 2;
 `;
