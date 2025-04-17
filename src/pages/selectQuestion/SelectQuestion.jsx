@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 
 /* 
 4/17
 UI 구현 완료
-남은거: 백엔드로 데이터 보내기, 마지막 질문 이후 페이지 넘어가기(라우터), 선택 안 하고 넘어가려 하면 막기
-물어볼거: 마지막 질문에서 결과보기 버튼 띄워야 되는지?
+남은거: 백엔드 통신 처리, 마지막 질문 이후 페이지 넘어가기(라우터)
 */
 
 // 페이드인 애니메이션
@@ -25,20 +24,34 @@ const Container = styled.div`
   background-color: white;
   height: 90vh;
   width: 100vw;
-  padding: 5vh 5vw;
+  padding: 3vh 5vw;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
 `;
 
+// 프로세스바 컨테이너
+const ProcessBarContainer = styled.div`
+  width: 100%;
+  height: 1vh;
+  background-color: #eee;
+  overflow: hidden;
+`;
+
+const Progress = styled.div`
+  height: 100%;
+  width: ${(props) => props.percent}%;
+  background-color: rgb(255, 195, 236, 1);
+  transition: width 0.3s ease-in-out;
+`;
+
 // 질문 컨테이너
 const QuestionContainer = styled.div`
   position: absolute;
-  top: 8vh;
-  left: 54%;
-  transform: translateX(-50%);
-  width: 90%;
+  width: 70%;
+  top: 10vh;
+  left: 7vh;
   animation: ${fadeIn} 1s ease-in-out;
 `;
 
@@ -56,7 +69,7 @@ const Question = styled.div`
 
 // 선택 박스 컨테이너
 const SelectContainer = styled.div`
-  margin-top: 18vh;
+  margin-top: 22vh;
   text-align: center;
   animation: ${fadeIn} 0.5s ease-in-out;
   animation-delay: 0.7s;
@@ -86,37 +99,33 @@ const VsText = styled.div`
   font-size: 4vw;
 `;
 
-// 이전/다음 버튼 컨테이너
+// 이전 버튼 컨테이너
 const ArrowContainer = styled.div`
-  margin-top: 8vh;
-  margin-bottom: 2vh;
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding-left: 5vw;
-  padding-right: 5vw;
+  position: absolute;
+  bottom: 7vh;
+  padding-right: 80vw;
 `;
 
 const Arrow = styled.button`
-  width: 10vw;
-  height: 5vh;
+  width: 12vw;
   background-color: white;
   font-size: 5vw;
+  color: grey;
 `;
 
-// 프로세스바 컨테이너
-const ProcessBarContainer = styled.div`
-  width: 100%;
-  height: 1vh;
-  background-color: #eee;
-  overflow: hidden;
-`;
-
-const Progress = styled.div`
-  height: 100%;
-  width: ${(props) => props.percent}%;
-  background-color: rgb(255, 195, 236, 1);
-  transition: width 0.3s ease-in-out;
+// 완료 버튼
+const FinishButton = styled.button`
+  position: absolute;
+  bottom: 6.2vh;
+  right: 5vw;
+  background-color: white;
+  color: black;
+  font-size: 4.5vw;
+  padding: 1.2vh 30vw;
+  border: none;
+  border-radius: 1vh;
+  box-shadow: 0px 0px 10px lightgray;
+  animation: ${fadeIn} 0.5s ease-in-out;
 `;
 
 const SelectQuestion = () => {
@@ -151,9 +160,16 @@ const SelectQuestion = () => {
   ];
   const currentQuestion = questions[index]; // 현재 질문
 
-  const handleIsSelect = (index) => {
-    // 버튼 클릭 여부 판단 함수
-    setIsSelected(index);
+  const handleIsSelect = (choiceIndex) => {
+    setIsSelected(choiceIndex);
+
+    if (index < totalQuestion - 1) {
+      // 마지막 질문에서는 완료 버튼으로만 이동 (자동 이동 X)
+      setTimeout(() => {
+        setIndex((prev) => prev + 1);
+        setIsSelected(null);
+      }, 1000);
+    }
   };
 
   const handlePrevQuestion = () => {
@@ -164,23 +180,15 @@ const SelectQuestion = () => {
     }
   };
 
-  const handleNextQuestion = () => {
-    // 다음 질문으로
-    if (index < totalQuestion - 1) {
-      setIndex((index) => index + 1);
-      setIsSelected(null); // 선택 초기화
-    } else {
-      // 완료 페이지로 이동
-    }
-  };
-
   return (
     <Container>
+      <ProcessBarContainer>
+        <Progress percent={percent} />
+      </ProcessBarContainer>
       <QuestionContainer key={`q-${index}`}>
         <QuestionNumber>Q{index + 1}.</QuestionNumber>
         <Question>{currentQuestion.question}</Question>
       </QuestionContainer>
-
       <SelectContainer key={`s-${index}`}>
         <SelectBox
           isSelected={isSelected === 0}
@@ -196,7 +204,6 @@ const SelectQuestion = () => {
           {currentQuestion.choices[1]}
         </SelectBox>
       </SelectContainer>
-
       <ArrowContainer>
         <Arrow
           style={{ visibility: index === 0 ? "hidden" : "visible" }} // 첫 번째 질문일 때 이전 화살표 안 보이게
@@ -204,14 +211,15 @@ const SelectQuestion = () => {
         >
           <FaArrowLeft />
         </Arrow>
-        <Arrow onClick={handleNextQuestion}>
-          <FaArrowRight />
-        </Arrow>
       </ArrowContainer>
-
-      <ProcessBarContainer>
-        <Progress percent={percent} />
-      </ProcessBarContainer>
+      {index === totalQuestion - 1 &&
+        isSelected !== null && ( // 마지막 질문 선택돼야 완료 버튼 표시
+          <FinishButton
+            onClick={() => console.log("결과 페이지 이동 로직 넣는 자리")}
+          >
+            완료
+          </FinishButton>
+        )}
     </Container>
   );
 };
