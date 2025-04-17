@@ -5,7 +5,7 @@ import { FaArrowLeft } from "react-icons/fa";
 /* 
 4/17
 UI 구현 완료
-남은거: 백엔드 통신 처리, 마지막 질문 이후 페이지 넘어가기(라우터)
+남은거: 글꼴 적용, 백엔드 통신 처리, 마지막 질문 이후 페이지 넘어가기(라우터)
 */
 
 // 페이드인 애니메이션
@@ -80,16 +80,16 @@ const SelectBox = styled.button`
   height: 19vh;
   width: 72vw;
   font-size: 6vw;
-  padding: 2vh 5vw;
+  padding: 2vh 7vw;
   border-radius: 1vh;
   word-break: keep-all;
   white-space: normal;
   text-align: center;
 
   border: ${({ isSelected }) =>
-    isSelected ? "solid rgb(255, 195, 236, 1)" : "none"};
+    isSelected ? "none" : "solid 2.5px rgb(255, 195, 236, 1)"};
   background-color: ${({ isSelected }) =>
-    isSelected ? "white" : "rgb(255, 195, 236, 1)"};
+    isSelected ? "rgb(255, 195, 236, 1)" : "white"};
   transition: 0.5s ease;
 `;
 
