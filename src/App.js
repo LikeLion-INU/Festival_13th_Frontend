@@ -1,7 +1,9 @@
 import React from "react";
+// import { BrowserRouter, Routes, Route } from "react-router-dom";
 import styled from "styled-components";
 import GlobalStyle from "./styles/globalStyles";
 import Home from "./pages/home/Home";
+import SelectQuestion from "./pages/selectQuestion/SelectQuestion";
 import Result from "./pages/result/Result";
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
@@ -16,10 +18,14 @@ const AppContainer = styled.div`
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/result" element={<Result />} />
-      </Routes>
+      <GlobalStyle />
+      <AppContainer>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/questions" element={<SelectQuestion />} />
+          <Route path="/result" element={<Result />} />
+        </Routes>
+      </AppContainer>
     </Router>
   );
 }
