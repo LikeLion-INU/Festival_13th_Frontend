@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import styled, { keyframes, css } from "styled-components";
 import Lottie from "lottie-react";
 import animationData from "../../assets/home.json";
+// 모듈화된 컴포넌트들 임포트
+import InfoModal from "../../components/modal/InfoModal";
+import AlreadyLoggedInMessage from "../../components/message/AlreadyLoggedInMessage";
+import TimeNoticeModal from "../../components/modal/TimeNoticeModal";
+import { useNavigate } from 'react-router-dom';
 
 // 페이드인 애니메이션
 const fadeIn = keyframes`
@@ -321,11 +326,21 @@ const Home = () => {
   const [initialAnimationComplete, setInitialAnimationComplete] =
     useState(false);
 
+  // 추가 상태 변수들
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showAlreadyLoggedInMessage, setShowAlreadyLoggedInMessage] = useState(false);
+  const [isAlreadyLoggedIn, setIsAlreadyLoggedIn] = useState(false);
+
+  // 시간 안내 모달 상태 추가
+  const [showTimeNoticeModal, setShowTimeNoticeModal] = useState(false);
+
   // Lottie 애니메이션 참조
   const lottieRef = useRef(null);
 
   // 키보드 높이를 저장할 상태 추가
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  
+  const navigate = useNavigate();
   
   // VisualViewport API를 사용하여 키보드 높이를 감지 - 개선된 버전
   useEffect(() => {
@@ -366,7 +381,38 @@ const Home = () => {
     }
   }, [initialAnimationComplete]);
 
-  // 시간에 따른 버튼 텍스트 변경
+  // 페이지 로드 시 로컬 스토리지에서 인스타그램 값 불러오기
+  useEffect(() => {
+    const savedInstagram = localStorage.getItem('instagramId');
+    if (savedInstagram) {
+      setInstagram(savedInstagram);
+      setIsAlreadyLoggedIn(true);
+    }
+    
+    // 로그인 상태 및 시간 확인
+    checkLoginStatus();
+  }, []);
+  
+  // 로그인 상태와 시간에 따른 메시지 표시 여부 확인
+  const checkLoginStatus = () => {
+    const savedInstagram = localStorage.getItem('instagramId');
+    const now = new Date();
+    const hour = now.getHours();
+    
+    if (savedInstagram && hour < 18 && hour >= 6) {
+      setShowAlreadyLoggedInMessage(true);
+    } else {
+      setShowAlreadyLoggedInMessage(false);
+    }
+  };
+  
+  // 1분마다 상태 확인 갱신
+  useEffect(() => {
+    const interval = setInterval(checkLoginStatus, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 시간에 따른 버튼 텍스트 변경 (수정)
   useEffect(() => {
     const updateButtonText = () => {
       const now = new Date();
@@ -375,39 +421,71 @@ const Home = () => {
       if (hour >= 18 || hour < 6) {
         setButtonText("결과보기");
       } else {
-        setButtonText("시작하기");
+        // 이미 로그인했다면 다른 메시지 표시
+        if (isAlreadyLoggedIn) {
+          setButtonText("18시 이후에 확인하세요");
+        } else {
+          setButtonText("시작하기");
+        }
       }
     };
 
     updateButtonText();
     const interval = setInterval(updateButtonText, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAlreadyLoggedIn]); // isAlreadyLoggedIn 의존성 추가
 
-  // 다음 단계로 이동
-  const nextStep = () => {
-    setEntering(false);
-
-    setTimeout(() => {
-      setStep((prev) => prev + 1);
-      setEntering(true);
-    }, 500); // 애니메이션 시간과 일치
+  // 인스타그램 입력 핸들러 (로컬 스토리지 저장 추가)
+  const handleInstagramChange = (e) => {
+    const value = e.target.value;
+    setInstagram(value);
+    
+    // 로컬 스토리지에 저장
+    localStorage.setItem('instagramId', value);
   };
 
-  // 이전 단계로 이동
-  const prevStep = () => {
-    setEntering(false);
-
-    setTimeout(() => {
-      setStep((prev) => prev - 1);
-      setEntering(true);
-    }, 500); // 애니메이션 시간과 일치
+  // 로그인 데이터 저장
+  const saveLoginData = () => {
+    try {
+      // 인스타그램, 성별 정보를 로컬 스토리지에 저장
+      const loginData = {
+        instagram,
+        gender,
+        timestamp: new Date().toISOString(),
+      };
+      
+      localStorage.setItem('festivalLoginData', JSON.stringify(loginData));
+      setIsAlreadyLoggedIn(true);
+      
+      return true;
+    } catch (error) {
+      console.error('로컬 스토리지 저장 오류:', error);
+      return false;
+    }
   };
 
-  // 버튼 클릭 핸들러
+  // 버튼 클릭 핸들러 수정
   const handleButtonClick = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    
     if (step === 0) {
-      nextStep();
+      // 이미 로그인했을 경우
+      if (isAlreadyLoggedIn) {
+        if (hour >= 18 || hour < 6) {
+          // 18시 이후에는 결과 페이지로 이동
+          navigate('/result'); // Result 페이지로 이동
+        } else {
+          // 18시 이전에는 알림 모달 표시
+          setShowInfoModal(true);
+        }
+      } else if (hour >= 17) { // 신규 사용자 & 17시 이후
+        // 초기 사용자의 경우 안내 모달 표시
+        setShowTimeNoticeModal(true);
+      } else {
+        // 17시 이전은 정상적으로 가입 진행
+        nextStep();
+      }
     } else if (step === 1) {
       if (instagram.trim()) {
         nextStep();
@@ -416,11 +494,13 @@ const Home = () => {
       if (termsAgreed) {
         nextStep();
       }
-    } else if (step === 3) {
-      if (gender) {
-        // 여기서 데이터 제출 또는 다음 페이지로 이동
-        alert(`제출 완료! 인스타그램: ${instagram}, 성별: ${gender}`);
-      }
+    } else if (step === 3 && gender) {
+      // 제출 완료 후 홈 화면으로 이동
+      saveLoginData();
+      
+      // 제출 완료 메시지 표시 후 홈으로 이동
+      alert(`참가해주셔서 감사합니다! 18시 이후에 결과를 확인할 수 있습니다.`);
+      setStep(0); // 홈 화면으로 리셋
     }
   };
 
@@ -451,8 +531,38 @@ const Home = () => {
     }, 300);
   };
 
+  // 다음 단계로 이동
+  const nextStep = () => {
+    setEntering(false);
+
+    setTimeout(() => {
+      setStep((prev) => prev + 1);
+      setEntering(true);
+    }, 500); // 애니메이션 시간과 일치
+  };
+
+  // 이전 단계로 이동
+  const prevStep = () => {
+    setEntering(false);
+
+    setTimeout(() => {
+      setStep((prev) => prev - 1);
+      setEntering(true);
+    }, 500); // 애니메이션 시간과 일치
+  };
+
   return (
     <HomeContainer>
+      {/* 모달 컴포넌트 */}
+      {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
+      
+      {/* 시간 안내 모달 추가 - onContinue prop 제거 */}
+      {showTimeNoticeModal && 
+        <TimeNoticeModal 
+          onClose={() => setShowTimeNoticeModal(false)}
+        />
+      }
+      
       {step === 0 && (
         <LottieContainer>
           <Lottie
@@ -469,6 +579,13 @@ const Home = () => {
             segments={initialAnimationComplete ? [130, 290] : undefined}
           />
         </LottieContainer>
+      )}
+
+      {/* 이미 로그인했고 18시 이전인 경우 다른 메시지 표시 */}
+      {step === 0 && showAlreadyLoggedInMessage ? (
+        <AlreadyLoggedInMessage onShowModal={() => setShowInfoModal(true)} />
+      ) : (
+        step === 0 && <TitleImage src="/images/title.png" alt="타이틀 이미지" />
       )}
 
       {/* 뒤로 가기 버튼 - 1단계 이상일 때만 표시 */}
@@ -488,18 +605,16 @@ const Home = () => {
         </StepIndicator>
       )}
 
-      {step === 0 && <TitleImage src="/images/title.png" alt="타이틀 이미지" />}
-
-      {/* 단계 1: 인스타그램 입력 */}
+      {/* 단계 1: 인스타그램 입력 - 핸들러 변경 */}
       <StepContainer entering={entering} hidden={step !== 1}>
         <InputContainer>
-        <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
+          <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
           <Label htmlFor="instagram">인스타그램 아이디로 로그인해주세요</Label>
           <Input
             id="instagram"
             type="text"
             value={instagram}
-            onChange={(e) => setInstagram(e.target.value)}
+            onChange={handleInstagramChange} // 변경된 핸들러 사용
             placeholder="아이디를 입력해주세요"
             autoComplete="off"
             onFocus={handleInputFocus}
@@ -556,15 +671,20 @@ const Home = () => {
         </GenderContainer>
       </StepContainer>
 
-      <ButtonContainer step={step} keyboardHeight={keyboardHeight}>
-        <StyledButton
-          step={step}
-          onClick={handleButtonClick}
-          disabled={step > 0 && isButtonDisabled()}
-        >
-          {getButtonText()}
-        </StyledButton>
-      </ButtonContainer>
+      {/* 버튼 컨테이너 - 조건:
+        1. 이미 참가했고 18시 이전인 경우(showAlreadyLoggedInMessage가 true) 버튼 숨김
+        2. 그 외의 경우 버튼 표시 */}
+      {!showAlreadyLoggedInMessage && (
+        <ButtonContainer step={step} keyboardHeight={keyboardHeight}>
+          <StyledButton
+            step={step}
+            onClick={handleButtonClick}
+            disabled={step > 0 && isButtonDisabled()}
+          >
+            {getButtonText()}
+          </StyledButton>
+        </ButtonContainer>
+      )}
     </HomeContainer>
   );
 };

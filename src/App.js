@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import GlobalStyle from "./styles/globalStyles";
 import Home from "./pages/home/Home";
+import Result from "./pages/result/Result";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 const AppContainer = styled.div`
   width: 100%;
@@ -13,12 +15,12 @@ const AppContainer = styled.div`
 
 function App() {
   return (
-    <>
-      <GlobalStyle />
-      <AppContainer>
-        <Home />
-      </AppContainer>
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/result" element={<Result />} />
+      </Routes>
+    </Router>
   );
 }
 
