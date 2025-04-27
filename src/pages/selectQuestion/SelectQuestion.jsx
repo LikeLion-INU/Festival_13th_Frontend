@@ -19,6 +19,27 @@ const fadeIn = keyframes`
   }
 `;
 
+const fadeOut = keyframes`
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+`;
+
+const AnimatedContainer = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: ${props => props.fadeOut ? fadeOut : fadeIn} ${props => props.duration || '1s'} ease forwards;
+  animation-delay: ${props => props.delay || '0s'};
+  opacity: ${props => props.fadeOut ? 1 : 0};
+`;
+
+
 // 전체 컨테이너
 const Container = styled.div`
   position: relative;
@@ -134,6 +155,8 @@ const SelectQuestion = () => {
   const [isSelected, setIsSelected] = useState(null); // 버튼 클릭 여부
   const totalQuestion = 5; // 질문 개수
   const percent = ((index + 1) / totalQuestion) * 100; // 질문 진행도(%)
+  const [showCompleteMessage, setShowCompleteMessage] = useState(false); // 완료 메시지 표시 상태
+  const [fadeOut, setFadeOut] = useState(false); // 페이드아웃 효과를 위한 상태
   const questions = [
     {
       question: "연인과의 연락 빈도는?",
@@ -182,15 +205,55 @@ const SelectQuestion = () => {
     }
   };
 
-  // 완료 버튼 클릭 시 결과 페이지로 이동
+  // 완료 버튼 클릭 시 완료 메시지 표시 후 홈 화면으로 이동
   const handleFinish = () => {
-    // 여기에 선택한 답변 데이터를 저장하는 로직 추가 가능
-    // localStorage.setItem('answers', JSON.stringify(answers));
+    // 완료 메시지 표시
+    setShowCompleteMessage(true);
     
-    // 결과 페이지로 이동
-    navigate('/result');
+    // 3초 후 홈 화면으로 이동
+    setTimeout(() => {
+      setFadeOut(true); // 페이드아웃 효과 적용
+      
+      // 페이드아웃 후 홈으로 이동
+      setTimeout(() => {
+        navigate('/');
+      }, 1000); // 페이드아웃 시간 후 이동
+    }, 2000); // 메시지 표시 시간
   };
 
+  // 완료 메시지 컴포넌트
+  const CompletionMessage = () => (
+    <AnimatedContainer fadeOut={fadeOut} duration="1s" delay="0.2s" style={{height: '100vh', justifyContent: 'center'}}>
+      <div style={{ 
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <h1 style={{ 
+          fontSize: '32px', 
+          fontWeight: 'bold', 
+          marginBottom: '20px',
+          color: '#28041d'
+        }}>
+          모든 선택이<br /> 완료되었어요!
+        </h1>
+       
+      </div>
+    </AnimatedContainer>
+  );
+
+  // 완료 메시지가 표시 중이면 완료 화면 렌더링
+  if (showCompleteMessage) {
+    return (
+      <Container>
+        <CompletionMessage />
+      </Container>
+    );
+  }
+
+  // 기존 질문 화면 렌더링
   return (
     <Container>
       <ProcessBarContainer>
@@ -217,14 +280,14 @@ const SelectQuestion = () => {
       </SelectContainer>
       <ArrowContainer>
         <Arrow
-          style={{ visibility: index === 0 ? "hidden" : "visible" }} // 첫 번째 질문일 때 이전 화살표 안 보이게
+          style={{ visibility: index === 0 ? "hidden" : "visible" }}
           onClick={handlePrevQuestion}
         >
           <FaArrowLeft />
         </Arrow>
       </ArrowContainer>
       {index === totalQuestion - 1 &&
-        isSelected !== null && ( // 마지막 질문 선택돼야 완료 버튼 표시
+        isSelected !== null && (
           <FinishButton onClick={handleFinish}>
             완료
           </FinishButton>

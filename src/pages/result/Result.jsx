@@ -30,6 +30,7 @@ const CelebrationImage = styled.img`
   padding-bottom: 81px;
 `;
 
+
 // 스타일 컴포넌트
 const ResultContainer = styled.div`
   display: flex;
@@ -72,6 +73,25 @@ const MatchingInfo = styled.div`
   margin-bottom: 30px;
 `;
 
+// InstagramId 컴포넌트 수정 - 클릭 시 복사 기능 추가
+const InstagramIdContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15px 0;
+  cursor: pointer;
+  width: 100%;
+`;
+
+const CopyIcon = styled.img`
+    position: absolute;
+    top: -30px;
+    right: 80px;
+    width: 95px;
+    height: 30px;
+`;
+
 const InstagramId = styled.div`
   font-size: 28px;
   color: #28041d;
@@ -79,8 +99,24 @@ const InstagramId = styled.div`
   padding: 8px 14px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
   border-radius: 8px;
-  margin: 15px 0;
+  transition: all 0.2s ease;
+  min-width: 180px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+  
+  &:hover {
+    background-color: #ffaee5;
+  }
+  
+  &:active {
+    transform: scale(0.98);
+  }
 `;
+
+
 
 const Message = styled.p`
   font-size: 16px;
@@ -180,6 +216,7 @@ const Result = () => {
   const [matchResult, setMatchResult] = useState(null);
  // const [myInstagram, setMyInstagram] = useState('');
   const [fadeOut, setFadeOut] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   useEffect(() => {
     // 로컬 스토리지에서 사용자 정보 가져오기
@@ -255,6 +292,19 @@ const Result = () => {
     }, 800);
   };
 
+  // 복사 함수
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopied(true);
+        // 2초 후에 복사 상태 초기화
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('클립보드 복사 실패:', err);
+      });
+  };
+  
   const renderContent = () => {
     if (loading) {
       return null;
@@ -293,7 +343,14 @@ const Result = () => {
             <MatchingInfo>
               <Message style={{fontSize: '32px', fontWeight: 'bold', color: '#000000'}}>축하해요!</Message>
               <CelebrationImage src="/images/celebration.png" />
-              <InstagramId>@{matchResult.matchedId}</InstagramId>
+
+              <InstagramIdContainer onClick={() => copyToClipboard(`@${matchResult.matchedId}`)}>
+                <CopyIcon 
+                  src={copied ? "/images/copysuccess.png" : "/images/copymessage.png"} 
+                  alt={copied ? "복사 완료" : "복사"}
+                />
+                <InstagramId>@{matchResult.matchedId}</InstagramId>
+              </InstagramIdContainer>
               <Message>매칭된 사람과 멋쟁이 사자처럼 <br/>부스로 오시면 선물을 드려요!</Message>
               <Message style={{fontSize: '12px', fontWeight: 'bold', color: '#28041d',opacity: '0.5'}}>(선착순 한 커플)</Message>
 
