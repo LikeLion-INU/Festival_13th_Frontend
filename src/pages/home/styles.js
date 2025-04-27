@@ -172,24 +172,25 @@ export const ErrorMessage = styled.p`
 export const GenderContainer = styled.div`
   display: flex;
   justify-content: space-between;
-  width: 100%;
+  width: 70%;
   gap: 1rem;
+  padding-top: 3rem;
 `;
 
 export const GenderButton = styled.button`
   flex: 1;
   padding: 1rem;
   border-radius: 0.5rem;
-  border: 2px solid ${(props) => (props.selected ? "#ff8787" : "#ddd")};
+  border: 2px solid ${(props) => (props.selected ? "#FFC3EC" : "#ddd")};
   background-color: ${(props) =>
-    props.selected ? "rgba(255, 135, 135, 0.1)" : "white"};
+    props.selected ? "#FFC3EC" : "white"};
   font-size: 1rem;
   font-weight: ${(props) => (props.selected ? "bold" : "normal")};
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: #ff8787;
+    border-color: #FFC3EC;
   }
 `;
 
@@ -434,7 +435,7 @@ export const Step = styled.div`
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: ${(props) => (props.active ? "#ff8787" : "#ddd")};
+  background-color: ${(props) => (props.active ? "#FFC3EC" : "#ddd")};
   transition: background-color 0.3s ease;
 `;
 

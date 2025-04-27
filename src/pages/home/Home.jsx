@@ -350,13 +350,13 @@ const Home = () => {
 
       {/* 단계 2: 개인정보 수집동의 */}
       <StepContainer style={{alignItems: 'flex-start', gap: '0'}} entering={entering} hidden={step !== 2}>
-        <Label style={{paddingTop:'2rem',paddingLeft:'3rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>개인정보 수집 동의</Label>
-        <Label style={{paddingLeft:'3rem',fontSize: '16px',  textAlign: 'left'}}>원활한 매칭을 위해<br />개인정보 수집 동의가 필요해요</Label>
+        <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>개인정보 수집 동의</Label>
+        <Label style={{fontSize: '16px',  textAlign: 'left'}}>원활한 매칭을 위해<br />개인정보 수집 동의가 필요해요</Label>
       </StepContainer>
 
       {/* 단계 3: 성별 선택 */}
-      <StepContainer entering={entering} hidden={step !== 3}>
-        <h2>성별 선택</h2>
+      <StepContainer style= {{paddingLeft: '1rem',alignItems: 'flex-start'}}entering={entering} hidden={step !== 3}>
+        <h2>성별</h2>
         <GenderContainer>
           <GenderButton
             selected={gender === "male"}
@@ -398,8 +398,8 @@ const Home = () => {
 
       {/* 단계 5: 이미지 화면 */}
       <StepContainer style={{alignItems: 'flex-start'}} entering={entering} hidden={step !== 5}>
-      <Label style={{paddingTop:'2rem',paddingLeft:'3rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>질문에 대한 답을 <br />선택해주세요</Label>
-      <Label style={{paddingLeft:'3rem',fontSize: '16px',  textAlign: 'left'}}>똑같은 답을 선택한 이성과<br />매칭이 이뤄집니다</Label>
+      <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>질문에 대한 답을 <br />선택해주세요</Label>
+      <Label style={{fontSize: '16px',  textAlign: 'left'}}>똑같은 답을 선택한 이성과<br />매칭이 이뤄집니다</Label>
       </StepContainer>
 
       {/* 버튼 컨테이너 - 조건:

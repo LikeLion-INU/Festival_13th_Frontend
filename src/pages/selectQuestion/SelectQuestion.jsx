@@ -105,7 +105,7 @@ const SelectBox = styled.button`
   padding: 2vh 7vw;
   border-radius: 1vh;
   word-break: keep-all;
-  white-space: normal;
+  white-space: pre-line;
   text-align: center;
 
   border: ${({ isSelected }) =>
@@ -161,8 +161,8 @@ const SelectQuestion = () => {
     {
       question: "연인과의 연락 빈도는?",
       choices: [
-        "연락은 3시간에 한 번도 충분하다",
-        "연락은 30분에 한 번도 부족하다",
+        "연락은 3시간에 \n 한 번도 충분하다",
+        "연락은 30분에 \n 한 번도 부족하다",
       ],
     },
     {
