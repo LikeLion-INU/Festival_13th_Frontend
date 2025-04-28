@@ -92,59 +92,94 @@ const Home = () => {
     }
   }, [initialAnimationComplete]);
 
-  // 페이지 로드 시 로컬 스토리지에서 인스타그램 값 불러오기
-  useEffect(() => {
-    const savedInstagram = localStorage.getItem('instagramId');
-    if (savedInstagram) {
-      setInstagram(savedInstagram);
-      setIsAlreadyLoggedIn(true);
-    }
-    
-    // 로그인 상태 및 시간 확인
-    checkLoginStatus();
-  }, []);
-  
-  // 로그인 상태와 시간에 따른 메시지 표시 여부 확인
-  const checkLoginStatus = () => {
-    const savedInstagram = localStorage.getItem('instagramId');
-    const now = new Date();
-    const hour = now.getHours();
-    
-    if (savedInstagram && hour < 18 && hour >= 6) {
-      setShowAlreadyLoggedInMessage(true);
-    } else {
-      setShowAlreadyLoggedInMessage(false);
+  // API 호출을 위한 함수
+  const checkInstagramId = async (instagramId) => {
+    try {
+      const response = await fetch('/api/auth/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instaId: instagramId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('인스타그램 ID 확인 중 오류 발생:', error);
+      return { status: 'error', message: '서버 연결에 실패했습니다.' };
     }
   };
-  
-  // 1분마다 상태 확인 갱신
-  useEffect(() => {
-    const interval = setInterval(checkLoginStatus, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
-  // 시간에 따른 버튼 텍스트 변경 (수정)
-  useEffect(() => {
-    const updateButtonText = () => {
-      const now = new Date();
-      const hour = now.getHours();
+  // 로그인 API 추가
+  const loginUser = async (instagramId) => {
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ instaId: instagramId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('로그인 중 오류 발생:', error);
+      return { 
+        status: 'error', 
+        message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
+      };
+    }
+  };
 
-      if (hour >= 18 || hour < 6) {
-        setButtonText("결과보기");
-      } else {
-        // 이미 로그인했다면 다른 메시지 표시
-        if (isAlreadyLoggedIn) {
-          setButtonText("18시 이후에 확인하세요");
-        } else {
-          setButtonText("시작하기");
+  // 페이지 로드 시 실행
+  useEffect(() => {
+    const checkSavedLogin = async () => {
+      // 로컬 스토리지에서 인스타그램 ID만 가져옴
+      const savedInstagram = localStorage.getItem('instagramId');
+      
+      if (savedInstagram) {
+        try {
+          // 서버에서 최신 상태 확인
+          const response = await checkInstagramId(savedInstagram);
+          
+          if (response.status === 'success') {
+            setInstagram(savedInstagram);
+            
+            if (response.status === 'done') {
+              // 이미 답변 제출한 사용자
+              setIsAlreadyLoggedIn(true);
+            } else if (!response.isNewUser) {
+              // 기존 사용자지만 답변 미제출
+              setIsAlreadyLoggedIn(true);
+            }
+            
+            // 현재 시각 확인
+            const now = new Date();
+            const hour = now.getHours();
+            
+            if (response.status === 'done' && hour < 18 && hour >= 6) {
+              setShowAlreadyLoggedInMessage(true);
+            }
+          } else {
+            // 유효하지 않은 ID면 로컬 스토리지 삭제
+            localStorage.removeItem('instagramId');
+          }
+        } catch (error) {
+          console.error('로그인 확인 중 오류:', error);
         }
       }
     };
-
-    updateButtonText();
-    const interval = setInterval(updateButtonText, 60000);
-    return () => clearInterval(interval);
-  }, [isAlreadyLoggedIn]); // isAlreadyLoggedIn 의존성 추가
+    
+    checkSavedLogin();
+  }, []);
 
   // 인스타그램 입력 핸들러 (로컬 스토리지 저장 추가)
   const handleInstagramChange = (e) => {
@@ -175,45 +210,137 @@ const Home = () => {
     }
   };
 
-  // 버튼 클릭 핸들러 수정
-  const handleButtonClick = () => {
+  // 회원가입 API 호출 함수 추가
+  const signupUser = async (gender) => {
+    try {
+      // 인스타그램 ID는 API 요청 헤더로 전송
+      const instagramId = instagram.trim();
+      
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Instagram-ID': instagramId // 인스타그램 ID를 헤더로 전송 (또는 쿠키에 저장 필요)
+        },
+        body: JSON.stringify({ gender: gender }) // 성별 정보만 전송
+      });
+      
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('회원가입 중 오류 발생:', error);
+      return { 
+        status: 'error', 
+        message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
+      };
+    }
+  };
+
+  // handleButtonClick 함수 수정 - 18시 이후 로그인 처리
+  const handleButtonClick = async () => {
     const now = new Date();
     const hour = now.getHours();
     
     if (step === 0) {
-      // 이미 로그인했을 경우
-      if (isAlreadyLoggedIn) {
-        if (hour >= 18 || hour < 6) {
-          // 18시 이후에는 결과 페이지로 이동
-          navigate('/result'); // Result 페이지로 이동
-        } else {
-          // 18시 이전에는 알림 모달 표시
-          setShowInfoModal(true);
-        }
-      } else if (hour >= 17) { // 신규 사용자 & 17시 이후
-        // 초기 사용자의 경우 안내 모달 표시
-        setShowTimeNoticeModal(true);
-      } else {
-        // 17시 이전은 정상적으로 가입 진행
+      // 홈 화면에서 시작하기/결과보기 버튼 클릭
+      if (hour >= 18 || hour < 6) {
+        // 18시 이후 또는 새벽 6시 이전 - 결과 확인 가능 시간
+        // 바로 인스타그램 ID 입력 화면으로 이동
+        setButtonText("결과 확인하기");
         nextStep();
+      } else {
+        // 일반 참여 시간 (6시~18시)
+        if (isAlreadyLoggedIn) {
+          setShowInfoModal(true);
+        } else {
+          nextStep();
+        }
       }
     } else if (step === 1) {
+      // 인스타그램 ID 입력 후 버튼 클릭
       if (instagram.trim()) {
-        nextStep();
+        if (hour >= 18 || hour < 6) {
+          // 18시 이후 - 결과 확인 로직
+          const response = await loginUser(instagram);
+          
+          if (response.message === "로그인 성공") {
+            // 로그인 성공 시 결과 페이지로 이동
+            localStorage.setItem('instagramId', instagram); // 세션 유지용
+            navigate('/result');
+          } else {
+            // 로그인 실패 - 에러 메시지 표시
+            alert(response.message || "인스타그램 ID를 찾을 수 없습니다.");
+          }
+        } else {
+          // 일반 시간 - 기존 가입/로그인 로직 실행
+          const response = await checkInstagramId(instagram);
+          
+          if (response.status === 'success') {
+            if (response.isNewUser) {
+              // 신규 사용자는 성별 선택 단계로 이동 (개인정보 동의 단계 포함)
+              nextStep(); // 개인정보 동의 단계로
+            } else if (response.status === 'done') {
+              // 이미 답변 제출한 사용자
+              localStorage.setItem('instagramId', instagram);
+              localStorage.setItem('userStatus', 'done');
+              
+              if (hour >= 18 || hour < 6) {
+                // 18시 이후면 결과 페이지로 이동
+                navigate('/result');
+              } else {
+                // 18시 이전이면 "18시 이후에 확인" 메시지 표시
+                setIsAlreadyLoggedIn(true);
+                setShowAlreadyLoggedInMessage(true);
+                setStep(0); // 홈 화면으로 돌아감
+              }
+            } else {
+              // 기존 사용자지만 답변 미제출 - 질문 단계로 직접 이동
+              localStorage.setItem('instagramId', instagram);
+              localStorage.setItem('userStatus', 'incomplete');
+              navigate('/questions');
+            }
+          } else {
+            // API 오류 발생
+            alert(response.message || '서버 연결에 실패했습니다. 다시 시도해주세요.');
+          }
+        }
       }
     } else if (step === 2) {
-      
-        nextStep();
-      
+      // 개인정보 동의 화면에서 다음 버튼 클릭
+      nextStep();
     } else if (step === 3 && gender) {
-      // 모든 필수 정보 입력 완료 - 다음 단계로
-      nextStep();
+      // 성별 선택 화면에서 다음 버튼 클릭
+      // 회원가입 API 호출
+      const response = await signupUser(gender);
+      
+      if (response.status === 'success') {
+        // 성공 시 다음 단계로
+        localStorage.setItem('instagramId', instagram); // 로그인 상태 유지용
+        nextStep();
+      } else {
+        // 실패 시 에러 메시지 표시
+        alert(response.message || '회원가입 중 오류가 발생했습니다.');
+        
+        // 에러 유형에 따른 추가 처리
+        if (response.message === '이미 존재하는 인스타 ID입니다.') {
+          // 인스타 ID 중복 시 인스타그램 ID 입력 화면으로 돌아가기
+          setStep(1);
+          setEntering(true);
+        } else if (response.message === '성별 값이 잘못되었습니다. (male/female)') {
+          // 성별 값 오류 시 성별 선택 상태 초기화
+          setGender("");
+        }
+      }
     } else if (step === 4) {
-      // 준비 완료 단계에서 이미지 단계로 이동
-      nextStep();
+      // 준비 완료 단계에서 자동으로 다음 단계로 이동 (useEffect에서 처리)
     } else if (step === 5) {
-      // 이미지 단계에서 로컬 스토리지 저장 및 questions 페이지로 이동
-      saveLoginData();
+      // 이미지 단계에서 시작하기 버튼 클릭
+      // 인스타그램 ID와 성별 정보 저장
+      localStorage.setItem('instagramId', instagram);
+      localStorage.setItem('userStatus', 'incomplete');
       navigate('/questions');
     }
   };
@@ -225,11 +352,24 @@ const Home = () => {
     return false;
   };
 
-  // 버튼 텍스트 결정
+  // getButtonText 함수 수정 - 시간에 따라 버튼 텍스트 변경
   const getButtonText = () => {
-    if (step === 0) return buttonText;
-    if (step === 5) return "시작하기";
-    return "다음으로";
+    const now = new Date();
+    const hour = now.getHours();
+    
+    if (step === 0) {
+      if (hour >= 18 || hour < 6) {
+        return "결과 확인하기";
+      } else {
+        return isAlreadyLoggedIn ? "18시 이후에 확인하세요" : "시작하기";
+      }
+    } else if (step === 1) {
+      return hour >= 18 || hour < 6 ? "결과 확인하기" : "다음";
+    } else if (step === 5) {
+      return "시작하기";
+    } else {
+      return "다음";
+    }
   };
 
   // 입력 필드 포커스 핸들러 개선

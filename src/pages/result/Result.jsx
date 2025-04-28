@@ -209,27 +209,19 @@ const NoticeButton = styled.button`
 `;
 
 const Result = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [step, setStep] = useState(1);
   const [matchResult, setMatchResult] = useState(null);
- // const [myInstagram, setMyInstagram] = useState('');
   const [fadeOut, setFadeOut] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
+  
+  const navigate = useNavigate();
   
   useEffect(() => {
-    // 로컬 스토리지에서 사용자 정보 가져오기
-    const savedInstagram = localStorage.getItem('instagramId');
-    if (!savedInstagram) {
-      navigate('/');
-      return;
-    }
-    
-//    setMyInstagram(savedInstagram);
-    
-    // 매칭 결과 데이터 가져오기
-    fetchMatchData(savedInstagram);
+    // 페이지 로드 시 매칭 결과 가져오기
+    fetchMatchResult();
     
     // 텍스트 표시 타이밍
     setTimeout(() => {
@@ -237,26 +229,50 @@ const Result = () => {
     }, 500);
   }, [navigate]);
   
-  // 매칭 결과 가져오기 (임시 구현)
-  const fetchMatchData = (instagramId) => {
-    // API 통신 시뮬레이션
-    setTimeout(() => {
-      // 70% 확률로 매칭 성공
-      const isSuccess = Math.random() > 0.3;
+  // 매칭 결과 API 호출 함수
+  const fetchMatchResult = async () => {
+    try {
+      const response = await fetch('/api/matching-result', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // 세션 쿠키는 자동으로 포함됨
+      });
       
-      if (isSuccess) {
-        setMatchResult({
-          success: true,
-          matchedId: 'matched_user_' + Math.floor(Math.random() * 1000)
-        });
-      } else {
-        setMatchResult({
-          success: false
-        });
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
       }
       
+      const data = await response.json();
+      
+      if (data.message === "로그인된 사용자가 없습니다.") {
+        // 로그인 필요 - 홈으로 이동
+        setError("로그인이 필요합니다");
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+        return;
+      }
+      
+      // 매칭 결과 설정
+      setMatchResult({
+        success: !!data.mathcedInstarId, // 매칭된 ID가 있으면 성공
+        matchedId: data.mathcedInstarId || "", // 매칭된 인스타그램 ID
+        myId: data.yourInstarId // 내 인스타그램 ID
+      });
+      
       setLoading(false);
-    }, 1000);
+    } catch (error) {
+      console.error('매칭 결과 조회 중 오류 발생:', error);
+      setError("서버 연결에 실패했습니다");
+      setLoading(false);
+      
+      // 3초 후 홈으로 이동
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    }
   };
   
   // useEffect 내부에 자동 단계 전환 로직 수정
@@ -307,7 +323,20 @@ const Result = () => {
   
   const renderContent = () => {
     if (loading) {
-      return null;
+      return (
+        <AnimatedContainer fadeOut={fadeOut} duration="1s">
+          <MatchingText>결과를 가져오는 중...</MatchingText>
+        </AnimatedContainer>
+      );
+    }
+    
+    if (error) {
+      return (
+        <AnimatedContainer fadeOut={fadeOut} duration="1s">
+          <MatchingText>{error}</MatchingText>
+          <Message>홈 화면으로 이동합니다...</Message>
+        </AnimatedContainer>
+      );
     }
     
     switch (step) {

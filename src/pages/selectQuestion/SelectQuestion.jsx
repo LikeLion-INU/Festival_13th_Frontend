@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
@@ -157,6 +157,9 @@ const SelectQuestion = () => {
   const percent = ((index + 1) / totalQuestion) * 100; // 질문 진행도(%)
   const [showCompleteMessage, setShowCompleteMessage] = useState(false); // 완료 메시지 표시 상태
   const [fadeOut, setFadeOut] = useState(false); // 페이드아웃 효과를 위한 상태
+  const [answers, setAnswers] = useState([]); // 사용자 답변 저장 배열 추가
+  const [submitError, setSubmitError] = useState(""); // 에러 메시지 상태 추가
+  const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
   const questions = [
     {
       question: "연인과의 연락 빈도는?",
@@ -187,9 +190,21 @@ const SelectQuestion = () => {
 
   const handleIsSelect = (choiceIndex) => {
     setIsSelected(choiceIndex);
-
+    
+    // 답변 저장
+    const answer = {
+      questionNumber: index + 1,
+      choice: choiceIndex === 0 ? "FIRST" : "SECOND"
+    };
+    
+    // 이미 답변한 질문이면 업데이트, 아니면 새로 추가
+    setAnswers(prev => {
+      const filtered = prev.filter(a => a.questionNumber !== answer.questionNumber);
+      return [...filtered, answer];
+    });
+    
     if (index < totalQuestion - 1) {
-      // 마지막 질문에서는 완료 버튼으로만 이동 (자동 이동 X)
+      // 마지막 질문이 아니면 자동으로 다음 질문으로
       setTimeout(() => {
         setIndex((prev) => prev + 1);
         setIsSelected(null);
@@ -205,23 +220,74 @@ const SelectQuestion = () => {
     }
   };
 
-  // 완료 버튼 클릭 시 완료 메시지 표시 후 홈 화면으로 이동
-  const handleFinish = () => {
-    // 완료 메시지 표시
-    setShowCompleteMessage(true);
+  // 답변 제출 API 호출 함수 추가
+  const submitAnswers = async () => {
+    // 모든 질문에 답변했는지 확인
+    if (answers.length < totalQuestion) {
+      setSubmitError("모든 질문에 답변해주세요.");
+      return { status: "fail", message: "모든 질문에 답변해주세요." };
+    }
     
-    // 3초 후 홈 화면으로 이동
-    setTimeout(() => {
-      setFadeOut(true); // 페이드아웃 효과 적용
+    try {
+      setIsSubmitting(true);
       
-      // 페이드아웃 후 홈으로 이동
-      setTimeout(() => {
-        navigate('/');
-      }, 1000); // 페이드아웃 시간 후 이동
-    }, 2000); // 메시지 표시 시간
+      const response = await fetch('/api/member/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ answers: answers })
+      });
+      
+      if (!response.ok) {
+        throw new Error('API 요청 실패');
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('답변 제출 중 오류 발생:', error);
+      return { 
+        status: 'error', 
+        message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
+      };
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // 완료 메시지 컴포넌트
+  // 완료 버튼 클릭 핸들러 수정
+  const handleFinish = async () => {
+    // 답변 제출
+    const result = await submitAnswers();
+    
+    if (result.status === 'success') {
+      // 성공 시 완료 메시지 표시
+      setSubmitError("");
+      setShowCompleteMessage(true);
+      
+      // 3초 후 홈 화면으로 이동
+      setTimeout(() => {
+        setFadeOut(true);
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 1000);
+      }, 2000);
+    } else {
+      // 실패 시 에러 메시지 표시
+      setSubmitError(result.message);
+      
+      // 로그인 상태가 아닌 경우 홈으로 이동
+      if (result.message === "로그인 상태가 아닙니다.") {
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
+    }
+  };
+
+  // 완료 메시지 컴포넌트 수정 - 에러 메시지 추가
   const CompletionMessage = () => (
     <AnimatedContainer fadeOut={fadeOut} duration="1s" delay="0.2s" style={{height: '100vh', justifyContent: 'center'}}>
       <div style={{ 
@@ -239,10 +305,33 @@ const SelectQuestion = () => {
         }}>
           모든 선택이<br /> 완료되었어요!
         </h1>
-       
+        
+        {/* 부가 메시지 추가 */}
+        <p style={{
+          fontSize: '16px',
+          color: '#555',
+          marginTop: '10px'
+        }}>
+          매칭 결과는 오후 6시에 확인할 수 있어요.
+        </p>
       </div>
     </AnimatedContainer>
   );
+
+  // 에러 메시지 컴포넌트 추가
+  const ErrorMessage = ({ message }) => message ? (
+    <div style={{
+      color: 'red',
+      textAlign: 'center',
+      padding: '10px',
+      fontSize: '14px',
+      position: 'absolute',
+      bottom: '15vh',
+      width: '100%'
+    }}>
+      {message}
+    </div>
+  ) : null;
 
   // 완료 메시지가 표시 중이면 완료 화면 렌더링
   if (showCompleteMessage) {
@@ -253,45 +342,54 @@ const SelectQuestion = () => {
     );
   }
 
-  // 기존 질문 화면 렌더링
+  // 기존 질문 화면 렌더링에 에러 메시지 추가
   return (
     <Container>
       <ProcessBarContainer>
         <Progress percent={percent} />
       </ProcessBarContainer>
+      
       <QuestionContainer key={`q-${index}`}>
         <QuestionNumber>Q{index + 1}.</QuestionNumber>
         <Question>{currentQuestion.question}</Question>
       </QuestionContainer>
+      
       <SelectContainer key={`s-${index}`}>
         <SelectBox
           isSelected={isSelected === 0}
-          onClick={() => handleIsSelect(0)}
+          onClick={() => !isSubmitting && handleIsSelect(0)}
         >
           {currentQuestion.choices[0]}
         </SelectBox>
         <VsText>VS</VsText>
         <SelectBox
           isSelected={isSelected === 1}
-          onClick={() => handleIsSelect(1)}
+          onClick={() => !isSubmitting && handleIsSelect(1)}
         >
           {currentQuestion.choices[1]}
         </SelectBox>
       </SelectContainer>
+      
       <ArrowContainer>
         <Arrow
           style={{ visibility: index === 0 ? "hidden" : "visible" }}
-          onClick={handlePrevQuestion}
+          onClick={!isSubmitting ? handlePrevQuestion : undefined}
         >
           <FaArrowLeft />
         </Arrow>
       </ArrowContainer>
-      {index === totalQuestion - 1 &&
-        isSelected !== null && (
-          <FinishButton onClick={handleFinish}>
-            완료
-          </FinishButton>
-        )}
+      
+      {index === totalQuestion - 1 && isSelected !== null && (
+        <FinishButton 
+          onClick={!isSubmitting ? handleFinish : undefined}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "제출 중..." : "완료"}
+        </FinishButton>
+      )}
+      
+      {/* 에러 메시지 표시 */}
+      <ErrorMessage message={submitError} />
     </Container>
   );
 };
