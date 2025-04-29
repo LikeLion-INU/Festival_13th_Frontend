@@ -1,0 +1,45 @@
+name: CD with React
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies and Build React app
+      run: |
+        npm install
+        npm run build
+
+    - name: Docker build & push to DockerHub
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        docker build -f Dockerfile -t cubric0223/likelion_2025_festival_frontend:latest .
+        docker push cubric0223/likelion_2025_festival_frontend:latest
+
+    - name: Deploy React to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ubuntu
+        key: ${{ secrets.KEY }}
+        script: |
+          cd /home/ubuntu/deploy
+          sudo docker-compose pull react
+          sudo docker-compose up -d react
+          sudo docker image prune -f
