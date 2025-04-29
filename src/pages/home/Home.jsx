@@ -27,7 +27,7 @@ import {
 } from "./styles";
 
 // API 서비스 import 경로 수정
-import { checkLoginStatus, checkInstagramId, loginUser, signupUser } from '../../api/auth';
+import { checkInstagramId, loginUser, signupUser } from '../../api/auth';
 
 const Home = () => {
   // 상태 관리
@@ -94,31 +94,6 @@ const Home = () => {
     }
   }, [initialAnimationComplete]);
 
-  // 컴포넌트 마운트 시 로그인 상태 확인
-  useEffect(() => {
-    const checkSession = async () => {
-      const now = new Date();
-      const hour = now.getHours();
-      
-      // 세션 상태 확인
-      const response = await checkLoginStatus();
-      
-      if (response.isLoggedIn) {
-        setIsAlreadyLoggedIn(true);
-        
-        // 18시 이전인 경우 이미 로그인한 사용자에게 안내 메시지 표시
-        if (hour < 18 && hour >= 6) {
-          //setShowAlreadyLoggedInMessage(true);
-        } else {
-          // 18시 이후면 결과 페이지로 이동 가능
-          setButtonText("결과 확인하기");
-        }
-      }
-    };
-    
-    checkSession();
-  }, []);
-
   // 인스타그램 입력 핸들러 (로컬 스토리지 저장 추가)
   const handleInstagramChange = (e) => {
     const value = e.target.value;
@@ -141,28 +116,26 @@ const Home = () => {
         setButtonText("결과보기");
         nextStep();
       } else {
-        // 일반 참여 시간 (6시~18시)
-        // if (isAlreadyLoggedIn) {
-        //   //setShowInfoModal(true);
-        // } else {
-        //   nextStep(); // 인스타그램 ID 입력 화면으로 이동
-        // }
         nextStep();
       }
     } else if (step === 1) {
       // 인스타그램 ID 입력 후 버튼 클릭
       if (instagram.trim()) {
-        if (hour >= 18 || hour < 6) {
+        if (hour >= 18 || hour < 9) {
           // 18시 이후 - 결과 확인 로직
-          const response = await checkInstagramId(instagram);
+          const response = await loginUser(instagram);
           
-          if (response.status === 'success' || response.status === 'done') {
+          if (response.message === "로그인 성공") {
             // 로그인 성공 시 결과 페이지로 이동
             // localStorage 사용하지 않음 - 세션에 저장됨
             navigate('/result');
           } else {
+            // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
+            setShowTimeNoticeModal(true);
+            // 홈 화면으로 돌아가기
+            setStep(0);
             // 로그인 실패 시 에러 메시지
-            alert(response.message || "인스타그램 ID를 찾을 수 없습니다.");
+            // alert(response.message);
           }
         } else {
           // 18시 이전 로직
@@ -193,13 +166,12 @@ const Home = () => {
               // 이미 답변 완료했거나 기존 유저인 경우
               setStep(0);
 
-              setIsAlreadyLoggedIn(true);
+              //setIsAlreadyLoggedIn(true);
               setShowAlreadyLoggedInMessage(true);
               // 홈 화면으로 돌아가기
             } 
             
-            // API 오류
-            alert(response.message || '서버 연결에 실패했습니다. 다시 시도해주세요.');
+          
           }
         }
       }
@@ -216,7 +188,7 @@ const Home = () => {
         nextStep();
       } else {
         // 실패 시 에러 메시지 표시
-        alert(response.message || '회원가입 중 오류가 발생했습니다.');
+        alert(response.message);
         
         // 에러 유형에 따른 추가 처리
         if (response.message === '이미 존재하는 인스타 ID입니다.') {
@@ -370,7 +342,7 @@ const Home = () => {
       <StepContainer entering={entering} hidden={step !== 1}>
         <InputContainer>
           <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
-          <Label htmlFor="instagram">인스타그램 아이디로 로그인해주세요</Label>
+          <Label htmlFor="instagram">@없이 인스타그램 아이디로 로그인해주세요</Label>
           <Input
             id="instagram"
             type="text"

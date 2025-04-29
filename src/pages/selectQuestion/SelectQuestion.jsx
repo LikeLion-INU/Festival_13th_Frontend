@@ -3,7 +3,6 @@ import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { submitAnswers } from '../../api/survey';
-
 /* 
 4/17
 UI 구현 완료
@@ -271,7 +270,6 @@ const SelectQuestion = () => {
           모든 선택이<br /> 완료되었어요!
         </h1>
         
-        {/* 부가 메시지 추가 */}
         <p style={{
           fontSize: '16px',
           color: '#555',
@@ -303,6 +301,7 @@ const SelectQuestion = () => {
     return (
       <Container>
         <CompletionMessage />
+        
       </Container>
     );
   }

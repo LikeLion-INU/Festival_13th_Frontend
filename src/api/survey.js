@@ -21,7 +21,7 @@ export const submitAnswers = async (answers) => {
     console.error('답변 제출 중 오류 발생:', error);
     return { 
       status: 'error', 
-      message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
+      message: '돌아가서 답변을 다시 제출해주세요.' 
     };
   }
 }; 

@@ -38,10 +38,10 @@ export const loginUser = async (instagramId) => {
     
     return response.data;
   } catch (error) {
-    console.error('로그인 중 오류 발생:', error);
+    console.error('로그인 중 오류 발생:로그인 api', error);
     return { 
       status: 'error', 
-      message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
+      message: '아이디 입력 오류 혹은 사용자가 없습니다. @ 없이 입력해주세요' 
     };
   }
 };
@@ -59,17 +59,4 @@ export const signupUser = async (instagramId, gender) => {
   }
 };
 
-// 로그인 상태 확인 API 추가
-export const checkLoginStatus = async () => {
-  try {
-    const response = await api.get('/auth/status');
-    return response.data;
-  } catch (error) {
-    console.error('로그인 상태 확인 중 오류 발생:', error);
-    return { 
-      status: 'error', 
-      isLoggedIn: false,
-      message: '서버 연결에 실패했습니다.' 
-    };
-  }
-};
+

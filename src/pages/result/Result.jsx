@@ -246,16 +246,17 @@ const Result = () => {
       
       // 매칭 결과 설정
       setMatchResult({
-        success: !!data.mathcedInstarId, // 매칭된 ID가 있으면 성공
-        matchedId: data.mathcedInstarId || "", // 매칭된 인스타그램 ID
-        myId: data.yourInstarId // 내 인스타그램 ID
+        success: !!data.matchedInstarId, // !! 연산자로 boolean으로 변환, 값이 있으면 true
+        matchedId: data.matchedInstarId, // 오타 수정
+        myId: data.yourInstarId // 오타 수정
       });
       
       setLoading(false);
     } catch (error) {
-      console.error('매칭 결과 조회 중 오류:', error);
-      setError("서버 연결에 실패했습니다");
+      console.error('매칭 결과 조회 중 오류2:', error);
+      setError("서버 연결에 실패했습니다2");
       setLoading(false);
+      
       
       // 3초 후 홈으로 이동
       setTimeout(() => {

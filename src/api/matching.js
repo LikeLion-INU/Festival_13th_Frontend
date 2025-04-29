@@ -19,10 +19,10 @@ export const getMatchingResult = async () => {
     
     return response.data;
   } catch (error) {
-    console.error('매칭 결과 조회 중 오류 발생:', error);
+    console.error('매칭 결과 조회 중 오류 발생:1', error);
     return { 
       status: 'error', 
-      message: '서버 연결에 실패했습니다.' 
+      message: '서버 연결에 실패했습니다.1' 
     };
   }
 }; 
