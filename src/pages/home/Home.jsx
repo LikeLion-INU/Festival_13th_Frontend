@@ -137,7 +137,8 @@ const Home = () => {
       // 홈 화면에서 시작하기/결과보기 버튼 클릭
       if (hour >= 18 || hour < 6) {
         // 18시 이후 또는 새벽 6시 이전 - 결과 확인 가능 시간
-        setButtonText("결과 확인하기");
+        // 바로 인스타그램 ID 입력 화면으로 이동
+        setButtonText("결과보기");
         nextStep();
       } else {
         // 일반 참여 시간 (6시~18시)
@@ -252,12 +253,12 @@ const Home = () => {
     
     if (step === 0) {
       if (hour >= 18 || hour < 6) {
-        return "결과 확인하기";
+        return "결과보기";
       } else {
         return "시작하기";
       }
     } else if (step === 1) {
-      return hour >= 18 || hour < 6 ? "결과 확인하기" : "다음";
+      return hour >= 18 || hour < 6 ? "결과보기" : "다음";
     } else if (step === 5) {
       return "시작하기";
     } else {
