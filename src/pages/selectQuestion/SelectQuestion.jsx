@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
+import { submitAnswers } from '../../api/survey';
 
 /* 
 4/17
@@ -221,45 +222,9 @@ const SelectQuestion = () => {
   };
 
   // 답변 제출 API 호출 함수 추가
-  const submitAnswers = async () => {
-    // 모든 질문에 답변했는지 확인
-    if (answers.length < totalQuestion) {
-      setSubmitError("모든 질문에 답변해주세요.");
-      return { status: "fail", message: "모든 질문에 답변해주세요." };
-    }
-    
-    try {
-      setIsSubmitting(true);
-      
-      const response = await fetch('/api/member/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ answers: answers })
-      });
-      
-      if (!response.ok) {
-        throw new Error('API 요청 실패');
-      }
-      
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error('답변 제출 중 오류 발생:', error);
-      return { 
-        status: 'error', 
-        message: '서버 연결에 실패했습니다. 다시 시도해주세요.' 
-      };
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 완료 버튼 클릭 핸들러 수정
   const handleFinish = async () => {
     // 답변 제출
-    const result = await submitAnswers();
+    const result = await submitAnswers(answers);
     
     if (result.status === 'success') {
       // 성공 시 완료 메시지 표시

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { getMatchingResult } from '../../api/matching';
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -232,19 +233,7 @@ const Result = () => {
   // 매칭 결과 API 호출 함수
   const fetchMatchResult = async () => {
     try {
-      const response = await fetch('/api/matching-result', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // 세션 쿠키는 자동으로 포함됨
-      });
-      
-      if (!response.ok) {
-        throw new Error('API 요청 실패');
-      }
-      
-      const data = await response.json();
+      const data = await getMatchingResult();
       
       if (data.message === "로그인된 사용자가 없습니다.") {
         // 로그인 필요 - 홈으로 이동
@@ -264,7 +253,7 @@ const Result = () => {
       
       setLoading(false);
     } catch (error) {
-      console.error('매칭 결과 조회 중 오류 발생:', error);
+      console.error('매칭 결과 조회 중 오류:', error);
       setError("서버 연결에 실패했습니다");
       setLoading(false);
       
