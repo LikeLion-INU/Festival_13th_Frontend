@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
 import { submitAnswers } from '../../api/survey';
+import InfoModal from "../../components/modal/InfoModal";
+import animationData from "../../assets/home.json";
+import HomeScreen from "../../components/screens/HomeScreen";
 /* 
 4/17
 UI 구현 완료
@@ -44,7 +47,7 @@ const AnimatedContainer = styled.div`
 const Container = styled.div`
   position: relative;
   background-color: white;
-  height: 90vh;
+  height: 100vh;
   width: 100vw;
   padding: 3vh 5vw;
   display: flex;
@@ -160,6 +163,11 @@ const SelectQuestion = () => {
   const [answers, setAnswers] = useState([]); // 사용자 답변 저장 배열 추가
   const [submitError, setSubmitError] = useState(""); // 에러 메시지 상태 추가
   const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
+  const [showTempHomeScreen, setShowTempHomeScreen] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [initialAnimationComplete, setInitialAnimationComplete] = useState(true);
+  const lottieRef = useRef(null);
+  const [isSelecting, setIsSelecting] = useState(false); // 선택 진행 중 상태 추가
   const questions = [
     {
       question: "연인과의 연락 빈도는?",
@@ -189,6 +197,11 @@ const SelectQuestion = () => {
   const navigate = useNavigate();
 
   const handleIsSelect = (choiceIndex) => {
+    // 이미 선택 중이거나 제출 중이면 추가 클릭 무시
+    if (isSelecting || isSubmitting) return;
+    
+    // 선택 진행 중 상태로 변경
+    setIsSelecting(true);
     setIsSelected(choiceIndex);
     
     // 답변 저장
@@ -208,6 +221,13 @@ const SelectQuestion = () => {
       setTimeout(() => {
         setIndex((prev) => prev + 1);
         setIsSelected(null);
+        // 선택 완료 상태로 변경
+        setIsSelecting(false);
+      }, 1000);
+    } else {
+      // 마지막 질문이면 1초 후 선택 상태 해제
+      setTimeout(() => {
+        setIsSelecting(false);
       }, 1000);
     }
   };
@@ -220,8 +240,16 @@ const SelectQuestion = () => {
     }
   };
 
-  // 답변 제출 API 호출 함수 추가
+  // 애니메이션 완료 핸들러
+  const handleAnimationComplete = () => {
+    setInitialAnimationComplete(true);
+  };
+
+  // 답변 제출 API 호출 함수 수정
   const handleFinish = async () => {
+    // 제출 중 상태로 변경
+    setIsSubmitting(true);
+    
     // 답변 제출
     const result = await submitAnswers(answers);
     
@@ -230,17 +258,29 @@ const SelectQuestion = () => {
       setSubmitError("");
       setShowCompleteMessage(true);
       
-      // 3초 후 홈 화면으로 이동
+      // 3초 후 완료 메시지를 임시 홈 화면으로 전환
       setTimeout(() => {
         setFadeOut(true);
         
         setTimeout(() => {
-          navigate('/');
+          setShowCompleteMessage(false);
+          setShowTempHomeScreen(true);
+          
+          // 제출 완료 상태로 변경
+          setIsSubmitting(false);
+          
+          // 20초 후 실제 홈으로 이동
+          setTimeout(() => {
+            navigate('/');
+          }, 30000); 
         }, 1000);
-      }, 2000);
+      }, 3000);
     } else {
       // 실패 시 에러 메시지 표시
       setSubmitError(result.message);
+      
+      // 제출 완료 상태로 변경
+      setIsSubmitting(false);
       
       // 로그인 상태가 아닌 경우 홈으로 이동
       if (result.message === "로그인 상태가 아닙니다.") {
@@ -296,12 +336,31 @@ const SelectQuestion = () => {
     </div>
   ) : null;
 
+  // 임시 홈 화면이 표시 중이면 홈 화면 렌더링
+  if (showTempHomeScreen) {
+    return (
+      <Container>
+        <HomeScreen
+          animationData={animationData}
+          initialAnimationComplete={initialAnimationComplete}
+          lottieRef={lottieRef}
+          handleAnimationComplete={handleAnimationComplete}
+          showAlreadyLoggedInMessage={true} // 항상 메시지 표시
+          setShowInfoModal={setShowInfoModal}
+          handleButtonClick={() => {}} // 버튼 클릭은 무시
+          getButtonText={() => "18시 이후에 확인하세요"} // 버튼 텍스트 고정
+          keyboardHeight={0}
+        />
+        {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
+      </Container>
+    );
+  }
+
   // 완료 메시지가 표시 중이면 완료 화면 렌더링
   if (showCompleteMessage) {
     return (
       <Container>
         <CompletionMessage />
-        
       </Container>
     );
   }
@@ -321,14 +380,16 @@ const SelectQuestion = () => {
       <SelectContainer key={`s-${index}`}>
         <SelectBox
           isSelected={isSelected === 0}
-          onClick={() => !isSubmitting && handleIsSelect(0)}
+          onClick={() => handleIsSelect(0)}
+          disabled={isSelecting || isSubmitting}
         >
           {currentQuestion.choices[0]}
         </SelectBox>
         <VsText>VS</VsText>
         <SelectBox
           isSelected={isSelected === 1}
-          onClick={() => !isSubmitting && handleIsSelect(1)}
+          onClick={() => handleIsSelect(1)}
+          disabled={isSelecting || isSubmitting}
         >
           {currentQuestion.choices[1]}
         </SelectBox>

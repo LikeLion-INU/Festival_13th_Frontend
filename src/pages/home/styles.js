@@ -447,7 +447,7 @@ export const StyledButton = styled.button`
   background-color: ${props => props.step === 0 ? '#fefefe' : '#FFC3EC'};
   border-radius:${props => props.step === 0 ? '0.5rem' : '0'};
   border: none;
-  color: ${props => props.step === 0 ? '#000' : '#fff'};
+  color: #28041d
   box-shadow:${props => props.step === 0 ? '0 4px 8px rgba(0, 0, 0, 0.15)':'none'};
   transition: all 0.2s ease;
   cursor: pointer;
@@ -474,8 +474,7 @@ export const HomeContainer = styled.div`
   min-height: 100vh;
   max-height: 100vh;
   position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   background-color: white;
   padding: 0 16px;
   box-sizing: border-box;

@@ -112,7 +112,7 @@ const InfoModal = ({ onClose }) => {
             fontSize: '14px',
             color: '#555' 
           }}>
-            <li style={{ margin: '8px 0' }}>인스타그램 공개 계정이면 매칭이 될 확률이 높아요</li>
+            <li style={{ margin: '8px 0' }}>인스타그램 공개 계정이면 매칭이 훨씬 쉬워요</li>
             <li style={{ margin: '8px 0' }}>다음날 오전 10시까지 확인이 가능해요</li>
           </ul>
         </div>
@@ -135,7 +135,7 @@ const InfoModal = ({ onClose }) => {
           }}
           onClick={onClose}
         >
-          <span>확인</span>
+          <span style={{color: "#28041d"}}>확인</span>
         </button>
       </div>
     </div>

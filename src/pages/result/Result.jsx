@@ -23,7 +23,7 @@ const fadeOut = keyframes`
   }
 `;
 
-const CelebrationImage = styled.img`
+const ResultImage = styled.img`
   width: 60%;
   height: 60%;
   object-fit: cover;
@@ -121,6 +121,7 @@ const InstagramId = styled.div`
 
 const Message = styled.p`
   font-size: 16px;
+  font-weight: 500;
   text-align: center;
   color: #28041d;
   margin: 10px 0;
@@ -129,47 +130,26 @@ const Message = styled.p`
 
 // ButtonContainer 수정 - 불필요한 padding 제거
 const ButtonContainer = styled.div`
-  width: 100%;
+  width: 80%;
   display: flex;
   justify-content: center;
-  position: relative;
+  position: absolute;  // relative에서 absolute로 변경
+  bottom: 50px;        // 화면 아래에서부터의 거리 설정
   box-sizing: border-box;
   z-index: 10;
-  padding-top: 600px;
 `;
 
-// ActionButton 수정
-const ActionButton = styled.button`
-  width: 80%;
-  padding: 0.8rem 2rem;
-  font-size: 1.1rem;
-  background-color: #FFC3EC;
-  color: #28041d;
-  border: none;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  font-weight: bold;
-  
-  &:hover {
-    background-color: #ffb5e0;
-  }
-  
-  &:active {
-    transform: scale(0.98);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-`;
+
 
 // PublicAccountNotice 스타일 컴포넌트 추가
 const PublicAccountNotice = styled.div`
-  width: 85%;
+
+  width: 100%;
   max-width: 350px;
-  position: fixed;
   background-color: white;
   border-radius: 12px;
   padding: 20px;
+  position: fixed;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -179,7 +159,7 @@ const PublicAccountNotice = styled.div`
 
 const NoticeTitle = styled.h2`
   font-size: 28px;
-  font-weight: bold;
+  font-weight: 700;
   color: #28041d;
   text-align: center;
   margin-bottom: 10px;
@@ -187,7 +167,7 @@ const NoticeTitle = styled.h2`
 
 // NoticeButton을 ActionButton과 동일한 스타일로 변경
 const NoticeButton = styled.button`
-  width: 80%;
+  width: 100%;
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
   background-color: #FFC3EC;
@@ -221,49 +201,46 @@ const Result = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
+    // 함수를 useEffect 내부로 이동
+    const fetchMatchResult = async () => {
+      try {
+        const data = await getMatchingResult();
+        
+        if (data.message === "로그인된 사용자가 없습니다.") {
+          // 로그인 필요 - 홈으로 이동
+          setError("로그인이 필요합니다");
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+          return;
+        }
+        
+        // 매칭 결과 설정
+        setMatchResult({
+          success: !!data.matchedInstarId,
+          matchedId: data.matchedInstarId, 
+          myId: data.yourInstarId 
+        });
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('매칭 결과 조회 중 오류2:', error);
+        setError("서버 연결에 실패했습니다2");
+        setLoading(false);
+        
+        setTimeout(() => {
+          navigate('/');
+        }, 3000);
+      }
+    };
+
     // 페이지 로드 시 매칭 결과 가져오기
     fetchMatchResult();
     
-    // 텍스트 표시 타이밍
     setTimeout(() => {
       setShowContent(true);
     }, 500);
-  }, [navigate]);
-  
-  // 매칭 결과 API 호출 함수
-  const fetchMatchResult = async () => {
-    try {
-      const data = await getMatchingResult();
-      
-      if (data.message === "로그인된 사용자가 없습니다.") {
-        // 로그인 필요 - 홈으로 이동
-        setError("로그인이 필요합니다");
-        setTimeout(() => {
-          navigate('/');
-        }, 1500);
-        return;
-      }
-      
-      // 매칭 결과 설정
-      setMatchResult({
-        success: !!data.matchedInstarId, // !! 연산자로 boolean으로 변환, 값이 있으면 true
-        matchedId: data.matchedInstarId, // 오타 수정
-        myId: data.yourInstarId // 오타 수정
-      });
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('매칭 결과 조회 중 오류2:', error);
-      setError("서버 연결에 실패했습니다2");
-      setLoading(false);
-      
-      
-      // 3초 후 홈으로 이동
-      setTimeout(() => {
-        navigate('/');
-      }, 3000);
-    }
-  };
+  }, [navigate]); // navigate만 의존성으로 유지
   
   // useEffect 내부에 자동 단계 전환 로직 수정
   useEffect(() => {
@@ -346,22 +323,25 @@ const Result = () => {
             <PublicAccountNotice>
               <NoticeTitle>인스타그램 계정이<br />공개 계정이어야 해요</NoticeTitle>
               <Message>공개 계정이면 매칭이 훨씬 쉬워요!</Message>
-
-            
+              
+              
             </PublicAccountNotice>
             <ButtonContainer>
-              <NoticeButton onClick={handleNextStep}>
-                확인했어요
-              </NoticeButton>
-            </ButtonContainer>
+                <NoticeButton onClick={handleNextStep}>
+                  확인했어요
+                </NoticeButton>
+              </ButtonContainer>
+
+          
+            
           </AnimatedContainer>
         );
       case 3:
         return (
           <AnimatedContainer fadeOut={fadeOut} duration="1s" delay="0.3s">
             <MatchingInfo>
-              <Message style={{fontSize: '32px', fontWeight: 'bold', color: '#000000'}}>축하해요!</Message>
-              <CelebrationImage src="/images/celebration.png" />
+              <Message style={{fontSize: '32px', fontWeight: '700', color: '#000000'}}>축하해요!</Message>
+              <ResultImage src="/images/celebration.png" />
 
               <InstagramIdContainer onClick={() => copyToClipboard(`@${matchResult.matchedId}`)}>
                 <CopyIcon 
@@ -380,16 +360,12 @@ const Result = () => {
         return (
           <AnimatedContainer fadeOut={fadeOut} duration="1s" delay="0.3s">
             <MatchingInfo>
-              <Message>
-                아쉽게도 이번에는 매칭된 상대가 없어요.<br/>
-                다음 기회에 다시 참여해보세요!
-              </Message>
+              <Message style={{fontSize: '32px', fontWeight: '700', color: '#000000'}}>상대를  <br/> 찾지 못했어요.. </Message>
+              <ResultImage style={{width: "40%"}}src="/images/fail.png" />
+              <ResultImage style={{paddingTop: "none", width: '90%'}}src="/images/failmessage.png" />
+
             </MatchingInfo>
-            <ButtonContainer>
-              <ActionButton onClick={() => navigate('/')}>
-                홈으로 돌아가기
-              </ActionButton>
-            </ButtonContainer>
+            
           </AnimatedContainer>
         );
       default:

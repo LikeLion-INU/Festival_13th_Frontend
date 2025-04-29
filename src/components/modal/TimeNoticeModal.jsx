@@ -47,7 +47,7 @@ const TimeNoticeModal = ({ onClose }) => {
           margin: '20px 0',
           color: '#666'
         }}>
-          다음 날 오전 11시 이후에<br />다시 시도해 보세요!
+          다음 날 오전 10시 이후에<br />다시 시도해 보세요!
         </p>
         
         <div style={{

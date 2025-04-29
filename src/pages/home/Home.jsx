@@ -1,18 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
-import Lottie from "lottie-react";
+import React, { useState, useEffect } from "react";
 import animationData from "../../assets/home.json";
 // 모듈화된 컴포넌트들 임포트
 import InfoModal from "../../components/modal/InfoModal";
-import AlreadyLoggedInMessage from "../../components/message/AlreadyLoggedInMessage";
 import TimeNoticeModal from "../../components/modal/TimeNoticeModal";
 import { useNavigate } from 'react-router-dom';
+import HomeScreen from "../../components/screens/HomeScreen";
 
 // styles.js에서 스타일 컴포넌트 임포트
 import {
   AnimatedContainer,
   HomeContainer,
-  LottieContainer,
-  TitleImage,
   BackButton,
   StepContainer,
   InputContainer,
@@ -31,24 +28,17 @@ import { checkInstagramId, loginUser, signupUser } from '../../api/auth';
 
 const Home = () => {
   // 상태 관리
-  const [buttonText, setButtonText] = useState("시작하기");
   const [step, setStep] = useState(0); // 0: 홈, 1: 인스타그램, 2: 개인정보 동의, 3: 성별 선택
   const [instagram, setInstagram] = useState("");
   const [gender, setGender] = useState(""); // 'male' 또는 'female'
   const [entering, setEntering] = useState(true);
-  const [initialAnimationComplete, setInitialAnimationComplete] =
-    useState(false);
-
+  
   // 추가 상태 변수들
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showAlreadyLoggedInMessage, setShowAlreadyLoggedInMessage] = useState(false);
-  const [isAlreadyLoggedIn, setIsAlreadyLoggedIn] = useState(false);
 
   // 시간 안내 모달 상태 추가
   const [showTimeNoticeModal, setShowTimeNoticeModal] = useState(false);
-
-  // Lottie 애니메이션 참조
-  const lottieRef = useRef(null);
 
   // 키보드 높이를 저장할 상태 추가
   const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -79,21 +69,6 @@ const Home = () => {
     }
   }, []);
 
-  // 초기 애니메이션 완료 처리
-  const handleAnimationComplete = () => {
-    if (!initialAnimationComplete) {
-      setInitialAnimationComplete(true);
-    }
-  };
-
-  // 애니메이션 제어를 위한 useEffect
-  useEffect(() => {
-    if (initialAnimationComplete && lottieRef.current) {
-      // 더 넓은 범위의 프레임을 사용하고 애니메이션이 완전히 끝나기 전에 다시 시작하도록 조정
-      lottieRef.current.playSegments([150, 301], true);
-    }
-  }, [initialAnimationComplete]);
-
   // 인스타그램 입력 핸들러 (로컬 스토리지 저장 추가)
   const handleInstagramChange = (e) => {
     const value = e.target.value;
@@ -113,7 +88,6 @@ const Home = () => {
       if (hour >= 18 || hour < 6) {
         // 18시 이후 또는 새벽 6시 이전 - 결과 확인 가능 시간
         // 바로 인스타그램 ID 입력 화면으로 이동
-        setButtonText("결과보기");
         nextStep();
       } else {
         nextStep();
@@ -121,13 +95,12 @@ const Home = () => {
     } else if (step === 1) {
       // 인스타그램 ID 입력 후 버튼 클릭
       if (instagram.trim()) {
-        if (hour >= 18 || hour < 9) {
+        if (hour >= 18 || hour < 10) {
           // 18시 이후 - 결과 확인 로직
           const response = await loginUser(instagram);
           
           if (response.message === "로그인 성공") {
             // 로그인 성공 시 결과 페이지로 이동
-            // localStorage 사용하지 않음 - 세션에 저장됨
             navigate('/result');
           } else {
             // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
@@ -224,7 +197,8 @@ const Home = () => {
     const hour = now.getHours();
     
     if (step === 0) {
-      if (hour >= 18 || hour < 6) {
+      if (hour >= 18 || hour < 10) 
+      {
         return "결과보기";
       } else {
         return "시작하기";
@@ -288,140 +262,127 @@ const Home = () => {
       {/* 모달 컴포넌트 */}
       {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
       
-      {/* 시간 안내 모달 추가 - onContinue prop 제거 */}
+      {/* 시간 안내 모달 추가 */}
       {showTimeNoticeModal && 
         <TimeNoticeModal 
           onClose={() => setShowTimeNoticeModal(false)}
         />
       }
       
-      {step === 0 && (
-        <LottieContainer>
-          <Lottie
-            animationData={animationData}
-            loop={initialAnimationComplete}
-            autoplay={true}
-            lottieRef={lottieRef}
-            onComplete={handleAnimationComplete}
-            style={{ width: "100%", height: "100%" }}
-            rendererSettings={{
-              preserveAspectRatio: "xMidYMid slice",
-              progressiveLoad: false,
-            }}
-            segments={initialAnimationComplete ? [130, 290] : undefined}
-          />
-        </LottieContainer>
-      )}
-
-      {/* 이미 로그인했고 18시 이전인 경우 다른 메시지 표시 */}
-      {step === 0 && showAlreadyLoggedInMessage ? (
-        <AlreadyLoggedInMessage onShowModal={() => setShowInfoModal(true)} />
+      {/* step에 따라 다른 화면 표시 */}
+      {step === 0 ? (
+        <HomeScreen
+          animationData={animationData}
+          showAlreadyLoggedInMessage={showAlreadyLoggedInMessage}
+          setShowInfoModal={setShowInfoModal}
+          handleButtonClick={handleButtonClick}
+          getButtonText={getButtonText}
+          keyboardHeight={keyboardHeight}
+        />
       ) : (
-        step === 0 && <TitleImage src="/images/title.png" alt="타이틀 이미지" />
-      )}
+        <>
+          {/* 뒤로 가기 버튼 - 1단계 이상이고 4단계 미만일 때만 표시 */}
+          {step > 1 && step < 4 && (
+            <BackButton
+              src="/images/back.png"
+              alt="뒤로가기"
+              onClick={prevStep}
+            ></BackButton>
+          )}
 
-      {/* 뒤로 가기 버튼 - 1단계 이상이고 4단계 미만일 때만 표시 */}
-      {step > 1 && step < 4 && (
-        <BackButton
-          src="/images/back.png"
-          alt="뒤로가기"
-          onClick={prevStep}
-        ></BackButton>
-      )}
+          {/* 스텝 인디케이터 - 1~3단계에서만 표시 */}
+          {step > 0 && step < 4 && (
+            <StepIndicator>
+              <Step active={step >= 1} />
+              <Step active={step >= 2} />
+              <Step active={step >= 3} />
+            </StepIndicator>
+          )}
 
-      {/* 스텝 인디케이터 - 1~3단계에서만 표시 */}
-      {step > 0 && step < 4 && (
-        <StepIndicator>
-          <Step active={step >= 1} />
-          <Step active={step >= 2} />
-          <Step active={step >= 3} />
-        </StepIndicator>
-      )}
+          {/* 단계 1: 인스타그램 입력 */}
+          <StepContainer entering={entering} hidden={step !== 1}>
+            <InputContainer>
+              <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
+              <Label style={{opacity: '0.5'}}htmlFor="instagram">@없이 인스타그램 아이디로 로그인해주세요</Label>
+              <Input
+                id="instagram"
+                type="text"
+                value={instagram}
+                onChange={handleInstagramChange}
+                placeholder="아이디를 입력해주세요"
+                autoComplete="off"
+                onFocus={handleInputFocus}
+              />
+            </InputContainer>
+          </StepContainer>
 
-      {/* 단계 1: 인스타그램 입력 - 핸들러 변경 */}
-      <StepContainer entering={entering} hidden={step !== 1}>
-        <InputContainer>
-          <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
-          <Label htmlFor="instagram">@없이 인스타그램 아이디로 로그인해주세요</Label>
-          <Input
-            id="instagram"
-            type="text"
-            value={instagram}
-            onChange={handleInstagramChange} // 변경된 핸들러 사용
-            placeholder="아이디를 입력해주세요"
-            autoComplete="off"
-            onFocus={handleInputFocus}
-          />
-        </InputContainer>
-      </StepContainer>
+          {/* 단계 2: 개인정보 수집동의 */}
+          <StepContainer style={{alignItems: 'flex-start', gap: '0'}} entering={entering} hidden={step !== 2}>
+            <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>개인정보 수집 동의</Label>
+            <Label style={{opacity:'0.5',fontSize: '16px',  textAlign: 'left'}}>원활한 매칭을 위해<br />개인정보 수집 동의가 필요해요</Label>
+          </StepContainer>
 
-      {/* 단계 2: 개인정보 수집동의 */}
-      <StepContainer style={{alignItems: 'flex-start', gap: '0'}} entering={entering} hidden={step !== 2}>
-        <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>개인정보 수집 동의</Label>
-        <Label style={{fontSize: '16px',  textAlign: 'left'}}>원활한 매칭을 위해<br />개인정보 수집 동의가 필요해요</Label>
-      </StepContainer>
+          {/* 단계 3: 성별 선택 */}
+          <StepContainer style= {{paddingLeft: '1rem',alignItems: 'flex-start'}}entering={entering} hidden={step !== 3}>
+            <h2>성별</h2>
+            <GenderContainer>
+              <GenderButton
+                selected={gender === "male"}
+                onClick={() => setGender("male")}
+              >
+                남성
+              </GenderButton>
+              <GenderButton
+                selected={gender === "female"}
+                onClick={() => setGender("female")}
+              >
+                여성
+              </GenderButton>
+            </GenderContainer>
+          </StepContainer>
 
-      {/* 단계 3: 성별 선택 */}
-      <StepContainer style= {{paddingLeft: '1rem',alignItems: 'flex-start'}}entering={entering} hidden={step !== 3}>
-        <h2>성별</h2>
-        <GenderContainer>
-          <GenderButton
-            selected={gender === "male"}
-            onClick={() => setGender("male")}
-          >
-            남성
-          </GenderButton>
-          <GenderButton
-            selected={gender === "female"}
-            onClick={() => setGender("female")}
-          >
-            여성
-          </GenderButton>
-        </GenderContainer>
-      </StepContainer>
+          {/* 단계 4: 준비 완료 메시지 - 특별한 애니메이션 적용 */}
+          <StepContainer entering={true} hidden={step !== 4}>
+            <AnimatedContainer duration="0.8s" delay="0.2s">
+              <div style={{ textAlign: 'center', marginTop: '30%' }}>
+                <h1 style={{ 
+                  fontSize: '36px', 
+                  fontWeight: 'bold', 
+                  marginBottom: '20px',
+                  color: '#28041d'
+                }}>
+                  모든 준비 완료!
+                </h1>
+                <p style={{ 
+                  fontSize: '18px', 
+                  color: '#666',
+                  marginTop: '15px'
+                }}>
+                  잠시 후 다음 단계로 이동합니다
+                </p>
+              </div>
+            </AnimatedContainer>
+          </StepContainer>
 
-      {/* 단계 4: 준비 완료 메시지 - 특별한 애니메이션 적용 */}
-      <StepContainer entering={true} hidden={step !== 4}>
-        <AnimatedContainer duration="0.8s" delay="0.2s">
-          <div style={{ textAlign: 'center', marginTop: '30%' }}>
-            <h1 style={{ 
-              fontSize: '36px', 
-              fontWeight: 'bold', 
-              marginBottom: '20px',
-              color: '#28041d'
-            }}>
-              모든 준비 완료!
-            </h1>
-            <p style={{ 
-              fontSize: '18px', 
-              color: '#666',
-              marginTop: '15px'
-            }}>
-              잠시 후 다음 단계로 이동합니다
-            </p>
-          </div>
-        </AnimatedContainer>
-      </StepContainer>
+          {/* 단계 5: 이미지 화면 */}
+          <StepContainer style={{alignItems: 'flex-start'}} entering={entering} hidden={step !== 5}>
+          <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>질문에 대한 답을 <br />선택해주세요</Label>
+          <Label style={{fontSize: '16px',  textAlign: 'left'}}>똑같은 답을 선택한 이성과<br />매칭이 이뤄집니다</Label>
+          </StepContainer>
 
-      {/* 단계 5: 이미지 화면 */}
-      <StepContainer style={{alignItems: 'flex-start'}} entering={entering} hidden={step !== 5}>
-      <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>질문에 대한 답을 <br />선택해주세요</Label>
-      <Label style={{fontSize: '16px',  textAlign: 'left'}}>똑같은 답을 선택한 이성과<br />매칭이 이뤄집니다</Label>
-      </StepContainer>
-
-      {/* 버튼 컨테이너 - 조건:
-        1. 이미 참가했고 18시 이전인 경우(showAlreadyLoggedInMessage가 true) 버튼 숨김
-        2. 그 외의 경우 버튼 표시 */}
-      {!showAlreadyLoggedInMessage && step !== 4 && (
-        <ButtonContainer step={step} keyboardHeight={keyboardHeight}>
-          <StyledButton
-            step={step}
-            onClick={handleButtonClick}
-            disabled={step > 0 && isButtonDisabled()}
-          >
-            {getButtonText()}
-          </StyledButton>
-        </ButtonContainer>
+          {/* 버튼 컨테이너 */}
+          {step !== 4 && (
+            <ButtonContainer step={step} keyboardHeight={keyboardHeight}>
+              <StyledButton
+                step={step}
+                onClick={handleButtonClick}
+                disabled={step > 0 && isButtonDisabled()}
+              >
+                {getButtonText()}
+              </StyledButton>
+            </ButtonContainer>
+          )}
+        </>
       )}
     </HomeContainer>
   );
