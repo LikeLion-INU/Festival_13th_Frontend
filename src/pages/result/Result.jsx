@@ -197,7 +197,6 @@ const Result = () => {
   const [step, setStep] = useState(1);
   const [matchResult, setMatchResult] = useState(null);
   const [fadeOut, setFadeOut] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [showCopyMessage, setShowCopyMessage] = useState(false);
   const copyTimeoutRef = useRef(null);
@@ -291,7 +290,6 @@ const Result = () => {
       navigator.clipboard.writeText(text)
         .then(() => {
           // 성공 시 표시
-          setCopied(true);
           setShowCopyMessage(true);
           
           // 3초 후 메시지 제거
@@ -333,7 +331,6 @@ const Result = () => {
       
       const successful = document.execCommand('copy');
       if (successful) {
-        setCopied(true);
         setShowCopyMessage(true);
         
         // 3초 후 메시지 제거
