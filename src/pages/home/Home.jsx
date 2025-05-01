@@ -73,9 +73,6 @@ const Home = () => {
   const handleInstagramChange = (e) => {
     const value = e.target.value;
     setInstagram(value);
-    
-    // 로컬 스토리지에 저장
-    localStorage.setItem('instagramId', value);
   };
 
   // handleButtonClick 함수 수정 - 특히 step === 1 부분

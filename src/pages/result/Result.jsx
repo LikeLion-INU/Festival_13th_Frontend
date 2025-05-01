@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { getMatchingResult } from '../../api/matching';
@@ -27,8 +27,8 @@ const ResultImage = styled.img`
   width: 60%;
   height: 60%;
   object-fit: cover;
-  padding-top: 100px;
-  padding-bottom: 81px;
+  padding-top: 80px;
+  padding-bottom: 55px;
 `;
 
 
@@ -38,9 +38,9 @@ const ResultContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  background-color: white;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 `;
 
 // 애니메이션이 적용될 컨테이너 추가
@@ -50,6 +50,8 @@ const AnimatedContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  height: 90vh;
+
   animation: ${props => props.fadeOut ? fadeOut : fadeIn} ${props => props.duration || '1s'} ease forwards;
   animation-delay: ${props => props.delay || '0s'};
   opacity: ${props => props.fadeOut ? 1 : 0};
@@ -69,9 +71,9 @@ const MatchingInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: fixed;
-  margin-top: 40px;
-  margin-bottom: 30px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 `;
 
 // InstagramId 컴포넌트 수정 - 클릭 시 복사 기능 추가
@@ -197,6 +199,8 @@ const Result = () => {
   const [fadeOut, setFadeOut] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
+  const [showCopyMessage, setShowCopyMessage] = useState(false);
+  const copyTimeoutRef = useRef(null);
   
   const navigate = useNavigate();
   
@@ -275,78 +279,83 @@ const Result = () => {
     }, 800);
   };
 
-  // 클립보드에 텍스트 복사하는 향상된 함수
+  // 클립보드 복사 함수 개선
   const copyToClipboard = (text) => {
-    // 모던 Clipboard API 지원 확인
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    // 이전 타임아웃 제거
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+    
+    // 복사 시도
+    if (navigator.clipboard) {
       navigator.clipboard.writeText(text)
         .then(() => {
-          // 성공 메시지 표시
-          alert("클립보드에 복사되었습니다: " + text);
+          // 성공 시 표시
+          setCopied(true);
+          setShowCopyMessage(true);
+          
+          // 3초 후 메시지 제거
+          copyTimeoutRef.current = setTimeout(() => {
+            setShowCopyMessage(false);
+          }, 3000);
         })
-        .catch((err) => {
-          console.error("클립보드 복사 실패:", err);
-          // 대체 방법 사용
+        .catch(err => {
+          console.error('클립보드 복사 실패:', err);
+          // 실패 시 대체 방법
           fallbackCopyToClipboard(text);
         });
     } else {
-      // API를 지원하지 않는 경우 대체 방법 사용
+      // API 미지원 시 대체 방법
       fallbackCopyToClipboard(text);
     }
   };
   
-  // 하위 호환성을 위한 대체 복사 방법
+  // 대체 복사 방법 (기존 코드 유지하되 약간 개선)
   const fallbackCopyToClipboard = (text) => {
     try {
-      // 임시 textarea 요소 생성
-      const textArea = document.createElement("textarea");
+      const textArea = document.createElement('textarea');
       textArea.value = text;
       
-      // 화면에서 보이지 않게 스타일 지정
-      textArea.style.position = "fixed";
-      textArea.style.top = "0";
-      textArea.style.left = "0";
-      textArea.style.width = "2em";
-      textArea.style.height = "2em";
-      textArea.style.padding = "0";
-      textArea.style.border = "none";
-      textArea.style.outline = "none";
-      textArea.style.boxShadow = "none";
-      textArea.style.background = "transparent";
+      // 스타일 동일하게 유지
+      textArea.style.position = 'fixed';
+      textArea.style.top = '0';
+      textArea.style.left = '0';
+      textArea.style.width = '2em';
+      textArea.style.height = '2em';
+      textArea.style.padding = '0';
+      textArea.style.border = 'none';
+      textArea.style.outline = 'none';
+      textArea.style.boxShadow = 'none';
+      textArea.style.background = 'transparent';
       
       document.body.appendChild(textArea);
+      textArea.select();
       
-      // iOS에서는 선택 범위 지정 필요
-      if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
-        textArea.contentEditable = true;
-        textArea.readOnly = false;
-        
-        const range = document.createRange();
-        range.selectNodeContents(textArea);
-        
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-        textArea.setSelectionRange(0, 999999);
-      } else {
-        textArea.select();
-      }
-      
-      // 복사 명령 실행
-      const successful = document.execCommand("copy");
-      
+      const successful = document.execCommand('copy');
       if (successful) {
-        alert("클립보드에 복사되었습니다: " + text);
-      } else {
-        alert("직접 복사해주세요: " + text);
+        setCopied(true);
+        setShowCopyMessage(true);
+        
+        // 3초 후 메시지 제거
+        copyTimeoutRef.current = setTimeout(() => {
+          setShowCopyMessage(false);
+        }, 3000);
       }
       
       document.body.removeChild(textArea);
     } catch (err) {
-      console.error("클립보드 복사 실패:", err);
-      alert("직접 복사해주세요: " + text);
+      console.error('클립보드 복사 실패:', err);
     }
   };
+  
+  // 컴포넌트 언마운트 시 타임아웃 정리
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
   
   const renderContent = () => {
     if (loading) {
@@ -404,10 +413,12 @@ const Result = () => {
               <ResultImage src="/images/celebration.png" />
 
               <InstagramIdContainer onClick={() => copyToClipboard(`@${matchResult.matchedId}`)}>
-                <CopyIcon 
-                  src={copied ? "/images/copysuccess.png" : "/images/copymessage.png"} 
-                  alt={copied ? "복사 완료" : "복사"}
-                />
+                {showCopyMessage && (
+                  <CopyIcon 
+                    src="/images/copysuccess.png"
+                    alt="복사 완료"
+                  />
+                )}
                 <InstagramId>@{matchResult.matchedId}</InstagramId>
               </InstagramIdContainer>
               <Message>매칭된 사람과 멋쟁이 사자처럼 <br/>부스로 오시면 선물을 드려요!</Message>
@@ -422,7 +433,7 @@ const Result = () => {
             <MatchingInfo>
               <Message style={{fontSize: '32px', fontWeight: '700', color: '#000000'}}>상대를  <br/> 찾지 못했어요.. </Message>
               <ResultImage style={{width: "40%"}}src="/images/fail.png" />
-              <ResultImage style={{paddingTop: "none", width: '90%'}}src="/images/failmessage.png" />
+              <ResultImage style={{paddingTop: "0px", width: '90%'}}src="/images/failmessage.png" />
 
             </MatchingInfo>
             

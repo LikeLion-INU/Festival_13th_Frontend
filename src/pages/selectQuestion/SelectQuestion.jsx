@@ -47,7 +47,7 @@ const AnimatedContainer = styled.div`
 const Container = styled.div`
   position: relative;
   background-color: white;
-  height: 100vh;
+  height: 90vh;
   width: 100vw;
   padding: 3vh 5vw;
   display: flex;

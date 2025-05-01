@@ -9,24 +9,26 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 const AppContainer = styled.div`
   width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  max-width: 500px; /* 최대 너비 설정 */
+  margin: 0 auto;
+  overflow-x: hidden;
+  position: relative;
 `;
 
 function App() {
   return (
-    <Router>
+    <>
       <GlobalStyle />
-      <AppContainer>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/questions" element={<SelectQuestion />} />
-          <Route path="/result" element={<Result />} />
-        </Routes>
-      </AppContainer>
-    </Router>
+      <Router>
+        <AppContainer>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/questions" element={<SelectQuestion />} />
+            <Route path="/result" element={<Result />} />
+          </Routes>
+        </AppContainer>
+      </Router>
+    </>
   );
 }
 

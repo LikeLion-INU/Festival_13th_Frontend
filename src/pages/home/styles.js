@@ -33,21 +33,7 @@ export const slideOut = keyframes`
   }
 `;
 
-// === 공통 컨테이너 ===
-export const PageContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100vh;
-  max-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background-color: white;
-  padding: 0 16px;
-  box-sizing: border-box;
-`;
+
 
 // === 애니메이션 컨테이너 ===
 export const AnimatedContainer = styled.div`
@@ -474,7 +460,8 @@ export const HomeContainer = styled.div`
   min-height: 90vh;
   max-height: 100vh;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   background-color: white;
   padding: 0 16px;
   box-sizing: border-box;

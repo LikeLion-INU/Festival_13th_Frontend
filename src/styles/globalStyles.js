@@ -22,19 +22,45 @@ const GlobalStyle = createGlobalStyle`
     font-style: normal;
   }
 
+  /* 실제 화면 높이 CSS 변수 */
+  :root {
+    --vh: 1vh;
+    --app-height: 100vh;
+  }
+
   * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    
+  }
+
+  html, body {
+    /* 스크롤 방지 */
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: var(--app-height, 90vh);
+    /* iOS 모멘텀 스크롤 방지 */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+
+  #root {
+    height: var(--app-height, 90vh);
+    max-height: var(--app-height, 90vh);
+    overflow: hidden;
+    position: relative;
   }
 
   body {
     font-family: 'SUIT', 'Noto Sans KR', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f5f5f5;
+    background-color:rgb(255, 255, 255);
     color: #333;
+    /* 터치 하이라이트 방지 */
+    -webkit-tap-highlight-color: transparent;
   }
 
   a {
