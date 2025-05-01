@@ -21,6 +21,10 @@ jobs:
       with:
         node-version: '18'
 
+    - name: Create .env file from GitHub Secrets
+      run: |
+        echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
+
     - name: Install dependencies and Build React app
       run: |
         npm install
