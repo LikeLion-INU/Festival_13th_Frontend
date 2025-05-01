@@ -99,7 +99,7 @@ const Home = () => {
             
             // 오류 상태 확인 추가
             if (response.status === 'error') {
-              alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+              alert(response.message);
               return;
             }
             
