@@ -16,7 +16,7 @@ const api = axios.create({
 export const checkInstagramId = async (instagramId) => {
   try {
     const response = await api.post('/auth/check', { 
-      instaId: instagramId 
+      instarId: instagramId 
     });
     
     return response.data;
@@ -33,7 +33,7 @@ export const checkInstagramId = async (instagramId) => {
 export const loginUser = async (instagramId) => {
   try {
     const response = await api.post('/login', { 
-      instaId: instagramId 
+      instarId: instagramId 
     });
     
     return response.data;
