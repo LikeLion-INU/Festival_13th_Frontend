@@ -95,57 +95,72 @@ const Home = () => {
     } else if (step === 1) {
       // 인스타그램 ID 입력 후 버튼 클릭
       if (instagram.trim()) {
-        if (hour >= 18 || hour < 10) {
-          // 18시 이후 - 결과 확인 로직
-          const response = await loginUser(instagram);
-          
-          if (response.message === "로그인 성공") {
-            // 로그인 성공 시 결과 페이지로 이동
-            navigate('/result');
+        try {
+          if (hour >= 18 || hour < 10) {
+            // 18시 이후 - 결과 확인 로직
+            const response = await loginUser(instagram);
+            
+            // 오류 상태 확인 추가
+            if (response.status === 'error') {
+              alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+              return;
+            }
+            
+            if (response.message === "로그인 성공") {
+              // 로그인 성공 시 결과 페이지로 이동
+              navigate('/result');
+            } else {
+              // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
+              setShowTimeNoticeModal(true);
+              // 홈 화면으로 돌아가기
+              setStep(0);
+              // 로그인 실패 시 에러 메시지
+              // alert(response.message);
+            }
           } else {
-            // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
-            setShowTimeNoticeModal(true);
-            // 홈 화면으로 돌아가기
-            setStep(0);
-            // 로그인 실패 시 에러 메시지
-            // alert(response.message);
-          }
-        } else {
-          // 18시 이전 로직
-          const response = await checkInstagramId(instagram);
-          
-          if (response.status === 'success') {
-            if (response.isNewUser) {
-              // 신규 사용자
-              if (hour >= 17) {
-                // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
-                setShowTimeNoticeModal(true);
-                // 홈 화면으로 돌아가기
+            // 18시 이전 로직
+            const response = await checkInstagramId(instagram);
+            
+            // 오류 상태 확인 추가
+            if (response.status === 'error') {
+              alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
+              return;
+            }
+            
+            if (response.status === 'success') {
+              if (response.isNewUser) {
+                // 신규 사용자
+                if (hour >= 17) {
+                  // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
+                  setShowTimeNoticeModal(true);
+                  // 홈 화면으로 돌아가기
+                  setStep(0);
+                } else {
+                  // 17시 이전 신규 사용자 - 정상 가입 진행
+                  nextStep(); // 개인정보 동의 단계로
+                  // localStorage 사용하지 않음 - 세션에 저장됨
+                }
+              }
+              else if (response.status === 'success' || !response.isNewUser) {
+                // 기존 가입자지만 답변 미제출 - 질문 페이지로 이동
+                alert('기존 가입자지만 답변 미제출 - 질문 페이지로 이동');
+                navigate('/questions');
+              }
+            } else {
+              if (response.status === 'done') {
+                // 이미 답변 완료했거나 기존 유저인 경우
                 setStep(0);
-              } else {
-                // 17시 이전 신규 사용자 - 정상 가입 진행
-                nextStep(); // 개인정보 동의 단계로
-                // localStorage 사용하지 않음 - 세션에 저장됨
+                console.log(response.status);
+                //setIsAlreadyLoggedIn(true);
+                setShowAlreadyLoggedInMessage(true);
+                // 홈 화면으로 돌아가기
               }
             }
-            else if (response.status === 'success' || !response.isNewUser) {
-              // 기존 가입자지만 답변 미제출 - 질문 페이지로 이동
-              alert('기존 가입자지만 답변 미제출 - 질문 페이지로 이동');
-              navigate('/questions');
-              
-            }
-          } else {
-            if (response.status === 'done' || !response.isNewUser) {
-              // 이미 답변 완료했거나 기존 유저인 경우
-              setStep(0);
-
-              //setIsAlreadyLoggedIn(true);
-              setShowAlreadyLoggedInMessage(true);
-              // 홈 화면으로 돌아가기
-            } 
-            
-          
           }
+        } catch (error) {
+          // API 호출 중 발생한 오류 처리
+          console.error("API 요청 중 오류 발생:", error);
+          alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
         }
       }
     } else if (step === 2) {

@@ -4,19 +4,77 @@ const InfoModal = ({ onClose }) => {
   // 복사 성공 메시지 상태 추가
   const [showCopySuccess, setShowCopySuccess] = useState(false);
   
-  // 클립보드에 텍스트 복사하는 함수
+  // 클립보드에 텍스트 복사하는 향상된 함수
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        // 복사 성공 시 피드백 표시
-        setShowCopySuccess(true);
-        // 3초 후 메시지 숨김
-        setTimeout(() => setShowCopySuccess(false), 3000);
-      })
-      .catch(err => {
-        console.error('클립보드 복사 실패:', err);
-        alert('복사에 실패했습니다. 직접 복사해주세요.');
-      });
+    // 모던 Clipboard API 지원 확인
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => {
+          // 성공 메시지 표시
+          alert("클립보드에 복사되었습니다: " + text);
+        })
+        .catch((err) => {
+          console.error("클립보드 복사 실패:", err);
+          // 대체 방법 사용
+          fallbackCopyToClipboard(text);
+        });
+    } else {
+      // API를 지원하지 않는 경우 대체 방법 사용
+      fallbackCopyToClipboard(text);
+    }
+  };
+
+  // 하위 호환성을 위한 대체 복사 방법
+  const fallbackCopyToClipboard = (text) => {
+    try {
+      // 임시 textarea 요소 생성
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      
+      // 화면에서 보이지 않게 스타일 지정
+      textArea.style.position = "fixed";
+      textArea.style.top = "0";
+      textArea.style.left = "0";
+      textArea.style.width = "2em";
+      textArea.style.height = "2em";
+      textArea.style.padding = "0";
+      textArea.style.border = "none";
+      textArea.style.outline = "none";
+      textArea.style.boxShadow = "none";
+      textArea.style.background = "transparent";
+      
+      document.body.appendChild(textArea);
+      
+      // iOS에서는 선택 범위 지정 필요
+      if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+        textArea.contentEditable = true;
+        textArea.readOnly = false;
+        
+        const range = document.createRange();
+        range.selectNodeContents(textArea);
+        
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        textArea.setSelectionRange(0, 999999);
+      } else {
+        textArea.select();
+      }
+      
+      // 복사 명령 실행
+      const successful = document.execCommand("copy");
+      
+      if (successful) {
+        alert("클립보드에 복사되었습니다: " + text);
+      } else {
+        alert("직접 복사해주세요: " + text);
+      }
+      
+      document.body.removeChild(textArea);
+    } catch (err) {
+      console.error("클립보드 복사 실패:", err);
+      alert("직접 복사해주세요: " + text);
+    }
   };
 
   return (
