@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const InfoModal = ({ onClose }) => {
   // 복사 성공 메시지 상태 추가
-  const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [showCopySuccess] = useState(false);
   
   // 클립보드에 텍스트 복사하는 향상된 함수
   const copyToClipboard = (text) => {
