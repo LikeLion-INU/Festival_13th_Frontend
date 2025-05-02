@@ -289,7 +289,7 @@ const Result = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text)
         .then(() => {
-          // 성공 시 표시
+          // 성공 시 표시 - 이미 showCopyMessage가 false인 경우에만 설정
           setShowCopyMessage(true);
           
           // 3초 후 메시지 제거
@@ -299,11 +299,9 @@ const Result = () => {
         })
         .catch(err => {
           console.error('클립보드 복사 실패:', err);
-          // 실패 시 대체 방법
           fallbackCopyToClipboard(text);
         });
     } else {
-      // API 미지원 시 대체 방법
       fallbackCopyToClipboard(text);
     }
   };
@@ -410,10 +408,15 @@ const Result = () => {
               <ResultImage src="/images/celebration.png" />
 
               <InstagramIdContainer onClick={() => copyToClipboard(`@${matchResult.matchedId}`)}>
-                {showCopyMessage && (
+                {showCopyMessage ? (
                   <CopyIcon 
                     src="/images/copysuccess.png"
                     alt="복사 완료"
+                  />
+                ) : (
+                  <CopyIcon 
+                    src="/images/copymessage.png"
+                    alt="복사하기"
                   />
                 )}
                 <InstagramId>@{matchResult.matchedId}</InstagramId>
