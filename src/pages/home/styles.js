@@ -139,7 +139,6 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: #ff8787;
     box-shadow: 0 0 0 2px rgba(255, 135, 135, 0.2);
   }
   
@@ -251,6 +250,7 @@ export const ButtonContainer = styled.div`
     `${props.keyboardHeight}px` : '0px'};
   background-color: white;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  color: #28041d;
   
   // 첫 화면일 때만 페이드인 애니메이션 적용
   ${props => props.step === 0 && css`

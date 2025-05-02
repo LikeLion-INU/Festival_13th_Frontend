@@ -127,7 +127,9 @@ const InfoModal = ({ onClose }) => {
           fontSize: '24px', 
           fontWeight: 'bold',
           textAlign: 'center',
-          marginBottom: '20px'
+          marginBottom: '20px',
+          color: '#28041d',
+          opacity: '0.5'
         }}>
           매칭 결과 확인하는 법
         </h2>
