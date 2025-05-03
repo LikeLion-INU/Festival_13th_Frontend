@@ -58,7 +58,7 @@ const GlobalStyle = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color:rgb(255, 255, 255);
-    color: #333;
+    color: #333;  
     /* 터치 하이라이트 방지 */
     -webkit-tap-highlight-color: transparent;
   }
@@ -68,11 +68,12 @@ const GlobalStyle = createGlobalStyle`
     color: inherit;
   }
 
-  button {
-    cursor: pointer;
-    border: none;
-    outline: none;
-  }
+ button {
+  color: #28041d;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+}
 `;
 
 export default GlobalStyle;

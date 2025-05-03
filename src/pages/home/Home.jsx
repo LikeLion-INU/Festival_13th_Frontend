@@ -97,11 +97,6 @@ const Home = () => {
             // 18시 이후 - 결과 확인 로직
             const response = await loginUser(instagram);
             
-            // 오류 상태 확인 추가
-            if (response.status === 'error') {
-              alert(response.message);
-              return;
-            }
             
             if (response.message === "로그인 성공") {
               // 로그인 성공 시 결과 페이지로 이동
