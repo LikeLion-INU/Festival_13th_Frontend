@@ -118,6 +118,7 @@ export const InputContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  touch-action: none;
 `;
 
 export const Label = styled.label`
@@ -139,7 +140,7 @@ export const Input = styled.input`
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 135, 135, 0.2);
+    box-shadow: 0 0 0 1px #EEDCE8;
   }
   
   &::placeholder {
@@ -251,6 +252,7 @@ export const ButtonContainer = styled.div`
   background-color: white;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   color: #28041d;
+  transition: padding-bottom 0.2s;
   
   // 첫 화면일 때만 페이드인 애니메이션 적용
   ${props => props.step === 0 && css`
@@ -465,6 +467,7 @@ export const HomeContainer = styled.div`
   background-color: white;
   padding: 0 16px;
   box-sizing: border-box;
+  touch-action: none;
 `;
 
 // === TitleImage 추가 (기존 LogoImage와 동일) ===

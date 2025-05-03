@@ -52,7 +52,22 @@ const Home = () => {
       if (event.target) {
         const heightDifference = window.innerHeight - event.target.height;
         console.log('keyboard height:', heightDifference);
-        setKeyboardHeight(heightDifference > 0 ? heightDifference : 0);
+        
+        // 키보드 높이가 일정 값 이상일 때만 적용 (작은 변화 무시)
+        setKeyboardHeight(heightDifference > 10 ? heightDifference : 0);
+        
+        // 키보드가 감지되면 여러 번 업데이트를 시도하여 정확한 위치를 얻음
+        if (heightDifference > 10) {
+          const updateTimes = [100, 300, 500];
+          updateTimes.forEach(delay => {
+            setTimeout(() => {
+              if (window.visualViewport) {
+                const newHeightDiff = window.innerHeight - window.visualViewport.height;
+                setKeyboardHeight(newHeightDiff > 0 ? newHeightDiff : 0);
+              }
+            }, delay);
+          });
+        }
       }
     };
 
@@ -62,7 +77,8 @@ const Home = () => {
       
       // 초기 높이 설정을 위해 한 번 호출
       if (window.innerHeight > window.visualViewport.height) {
-        setKeyboardHeight(window.innerHeight - window.visualViewport.height);
+        const initialDiff = window.innerHeight - window.visualViewport.height;
+        setKeyboardHeight(initialDiff > 0 ? initialDiff : 0);
       }
       
       return () => window.visualViewport.removeEventListener("resize", resizeHandler);
@@ -221,6 +237,13 @@ const Home = () => {
 
   // 입력 필드 포커스 핸들러 개선
   const handleInputFocus = () => {
+    // 입력 필드에 포커스가 갈 때 문서 전체 스크롤 잠금
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.top = `-${window.scrollY}px`;
+    
     // 키보드가 열릴 때 컨테이너를 조정하기 위한 딜레이
     setTimeout(() => {
       // 현재 입력 필드로 스크롤
@@ -229,6 +252,17 @@ const Home = () => {
         input.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }, 300);
+  };
+
+  // 입력 필드가 포커스를 잃을 때 스크롤 잠금 해제를 위한 함수
+  const handleInputBlur = () => {
+    const scrollY = document.body.style.top;
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.top = '';
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
   };
 
   // 다음 단계로 이동
@@ -319,6 +353,7 @@ const Home = () => {
                 placeholder="아이디를 입력해주세요"
                 autoComplete="off"
                 onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </InputContainer>
           </StepContainer>
