@@ -182,7 +182,7 @@ const SelectQuestion = () => {
     },
     {
       question: "데이트하면서 밥을 먹는다면?",
-      choices: ["맛집 웨이팅 2시간", "근처 아무 곳이나 가기"],
+      choices: ["맛집 웨이팅 1시간", "근처 아무 곳이나 가기"],
     },
     {
       question: "연인과 싸웠다면?",
