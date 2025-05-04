@@ -29,7 +29,8 @@ const AlreadyLoggedInMessage = ({ onShowModal }) => {
           textDecoration: 'underline',
           color: '#28041d',
           cursor: 'pointer',
-          padding: '5px 10px'
+          padding: '5px 10px',
+          opacity: '0.5'
         }}
       >
         확인하는 법

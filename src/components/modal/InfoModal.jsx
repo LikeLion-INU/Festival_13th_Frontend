@@ -129,7 +129,7 @@ const InfoModal = ({ onClose }) => {
           textAlign: 'center',
           marginBottom: '20px',
           color: '#28041d',
-          opacity: '0.5'
+          
         }}>
           매칭 결과 확인하는 법
         </h2>
