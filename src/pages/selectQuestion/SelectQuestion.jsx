@@ -190,7 +190,7 @@ const SelectQuestion = () => {
     },
     {
       question: "선호하는 데이트는?",
-      choices: ["쉴틈없이 빡빡한 데이트", "여유로운 널널한 데이트"],
+      choices: ["스케줄을 짜는 계획적인 데이트", "일단 만나서 정하자! 즉흥적인 데이트"],
     },
   ];
   const currentQuestion = questions[index]; // 현재 질문

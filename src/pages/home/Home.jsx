@@ -88,7 +88,15 @@ const Home = () => {
   // 인스타그램 입력 핸들러 (로컬 스토리지 저장 추가)
   const handleInstagramChange = (e) => {
     const value = e.target.value;
-    setInstagram(value);
+    // 한글 입력 필터링 - 영문, 숫자, 특수문자만 허용
+    const filteredValue = value.replace(/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/g, '');
+    setInstagram(filteredValue);
+    
+    // 한글이 입력되었을 때 사용자에게 알림
+    if (value !== filteredValue) {
+      // 선택적: 한글 입력 시 알림 표시
+      // alert("인스타그램 아이디에는 한글을 입력할 수 없습니다.");
+    }
   };
 
   // handleButtonClick 함수 수정 - 특히 step === 1 부분
@@ -354,6 +362,8 @@ const Home = () => {
                 autoComplete="off"
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
+                pattern="[A-Za-z0-9._]*" // 영문, 숫자, 마침표, 밑줄만 허용
+                title="인스타그램 아이디는 영문, 숫자, 마침표(.), 밑줄(_)만 사용 가능합니다"
               />
             </InputContainer>
           </StepContainer>
