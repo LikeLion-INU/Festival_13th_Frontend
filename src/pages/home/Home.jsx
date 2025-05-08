@@ -3,7 +3,7 @@ import animationData from "../../assets/home.json";
 // 모듈화된 컴포넌트들 임포트
 import InfoModal from "../../components/modal/InfoModal";
 import TimeNoticeModal from "../../components/modal/TimeNoticeModal";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import HomeScreen from "../../components/screens/HomeScreen";
 
 // styles.js에서 스타일 컴포넌트 임포트
@@ -20,11 +20,11 @@ import {
   ButtonContainer,
   StyledButton,
   StepIndicator,
-  Step
+  Step,
 } from "./styles";
 
 // API 서비스 import 경로 수정
-import { checkInstagramId, loginUser, signupUser } from '../../api/auth';
+import { checkInstagramId, loginUser, signupUser } from "../../api/auth";
 
 const Home = () => {
   // 상태 관리
@@ -32,37 +32,39 @@ const Home = () => {
   const [instagram, setInstagram] = useState("");
   const [gender, setGender] = useState(""); // 'male' 또는 'female'
   const [entering, setEntering] = useState(true);
-  
+
   // 추가 상태 변수들
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showAlreadyLoggedInMessage, setShowAlreadyLoggedInMessage] = useState(false);
+  const [showAlreadyLoggedInMessage, setShowAlreadyLoggedInMessage] =
+    useState(false);
 
   // 시간 안내 모달 상태 추가
   const [showTimeNoticeModal, setShowTimeNoticeModal] = useState(false);
 
   // 키보드 높이를 저장할 상태 추가
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  
+
   const navigate = useNavigate();
-  
+
   // VisualViewport API를 사용하여 키보드 높이를 감지 - 개선된 버전
   useEffect(() => {
     const resizeHandler = (event) => {
       // 이벤트에서 직접 visualViewport 값을 가져옴
       if (event.target) {
         const heightDifference = window.innerHeight - event.target.height;
-        console.log('keyboard height:', heightDifference);
-        
+        console.log("keyboard height:", heightDifference);
+
         // 키보드 높이가 일정 값 이상일 때만 적용 (작은 변화 무시)
         setKeyboardHeight(heightDifference > 10 ? heightDifference : 0);
-        
+
         // 키보드가 감지되면 여러 번 업데이트를 시도하여 정확한 위치를 얻음
         if (heightDifference > 10) {
           const updateTimes = [100, 300, 500];
-          updateTimes.forEach(delay => {
+          updateTimes.forEach((delay) => {
             setTimeout(() => {
               if (window.visualViewport) {
-                const newHeightDiff = window.innerHeight - window.visualViewport.height;
+                const newHeightDiff =
+                  window.innerHeight - window.visualViewport.height;
                 setKeyboardHeight(newHeightDiff > 0 ? newHeightDiff : 0);
               }
             }, delay);
@@ -74,14 +76,15 @@ const Home = () => {
     // visualViewport 존재 여부 확인 방식 개선
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", resizeHandler);
-      
+
       // 초기 높이 설정을 위해 한 번 호출
       if (window.innerHeight > window.visualViewport.height) {
         const initialDiff = window.innerHeight - window.visualViewport.height;
         setKeyboardHeight(initialDiff > 0 ? initialDiff : 0);
       }
-      
-      return () => window.visualViewport.removeEventListener("resize", resizeHandler);
+
+      return () =>
+        window.visualViewport.removeEventListener("resize", resizeHandler);
     }
   }, []);
 
@@ -89,9 +92,9 @@ const Home = () => {
   const handleInstagramChange = (e) => {
     const value = e.target.value;
     // 한글 입력 필터링 - 영문, 숫자, 특수문자만 허용
-    const filteredValue = value.replace(/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/g, '');
+    const filteredValue = value.replace(/[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/g, "");
     setInstagram(filteredValue);
-    
+
     // 한글이 입력되었을 때 사용자에게 알림
     if (value !== filteredValue) {
       // 선택적: 한글 입력 시 알림 표시
@@ -103,7 +106,7 @@ const Home = () => {
   const handleButtonClick = async () => {
     const now = new Date();
     const hour = now.getHours();
-    
+
     if (step === 0) {
       // 홈 화면에서 시작하기/결과보기 버튼 클릭
       if (hour >= 18 || hour < 6) {
@@ -117,14 +120,13 @@ const Home = () => {
       // 인스타그램 ID 입력 후 버튼 클릭
       if (instagram.trim()) {
         try {
-          if (hour >= 18 || hour < 10) {
+          if (hour >= 18 || hour < 12) {
             // 18시 이후 - 결과 확인 로직
             const response = await loginUser(instagram);
-            
-            
+
             if (response.message === "로그인 성공") {
               // 로그인 성공 시 결과 페이지로 이동
-              navigate('/result');
+              navigate("/result");
             } else {
               // 17시 이후 신규 사용자 - 매칭 시간 아님 안내
               setShowTimeNoticeModal(true);
@@ -136,14 +138,14 @@ const Home = () => {
           } else {
             // 18시 이전 로직
             const response = await checkInstagramId(instagram);
-            
+
             // 오류 상태 확인 추가
-            if (response.status === 'error') {
+            if (response.status === "error") {
               alert("네트워크 오류가 발생했습니다. 다시 시도해주세요.");
               return;
             }
-            
-            if (response.status === 'success') {
+
+            if (response.status === "success") {
               if (response.isNewUser) {
                 // 신규 사용자
                 if (hour >= 17) {
@@ -156,14 +158,13 @@ const Home = () => {
                   nextStep(); // 개인정보 동의 단계로
                   // localStorage 사용하지 않음 - 세션에 저장됨
                 }
-              }
-              else if (response.status === 'success' || !response.isNewUser) {
+              } else if (response.status === "success" || !response.isNewUser) {
                 // 기존 가입자지만 답변 미제출 - 질문 페이지로 이동
-                alert('기존 가입자지만 답변 미제출 - 질문 페이지로 이동');
-                navigate('/questions');
+                alert("기존 가입자지만 답변 미제출 - 질문 페이지로 이동");
+                navigate("/questions");
               }
             } else {
-              if (response.status === 'done') {
+              if (response.status === "done") {
                 // 이미 답변 완료했거나 기존 유저인 경우
                 setStep(0);
                 console.log(response.status);
@@ -185,21 +186,23 @@ const Home = () => {
     } else if (step === 3 && gender) {
       // 회원가입 API 호출
       const response = await signupUser(instagram.trim(), gender);
-      
-      if (response.status === 'success') {
+
+      if (response.status === "success") {
         // 성공 시 다음 단계로
-        localStorage.setItem('instagramId', instagram); // 로그인 상태 유지용
+        localStorage.setItem("instagramId", instagram); // 로그인 상태 유지용
         nextStep();
       } else {
         // 실패 시 에러 메시지 표시
         alert(response.message);
-        
+
         // 에러 유형에 따른 추가 처리
-        if (response.message === '이미 존재하는 인스타 ID입니다.') {
+        if (response.message === "이미 존재하는 인스타 ID입니다.") {
           // 인스타 ID 중복 시 인스타그램 ID 입력 화면으로 돌아가기
           setStep(1);
           setEntering(true);
-        } else if (response.message === '성별 값이 잘못되었습니다. (male/female)') {
+        } else if (
+          response.message === "성별 값이 잘못되었습니다. (male/female)"
+        ) {
           // 성별 값 오류 시 성별 선택 상태 초기화
           setGender("");
         }
@@ -209,9 +212,9 @@ const Home = () => {
     } else if (step === 5) {
       // 이미지 단계에서 시작하기 버튼 클릭
       // 인스타그램 ID와 성별 정보 저장
-      localStorage.setItem('instagramId', instagram);
-      localStorage.setItem('userStatus', 'incomplete');
-      navigate('/questions');
+      localStorage.setItem("instagramId", instagram);
+      localStorage.setItem("userStatus", "incomplete");
+      navigate("/questions");
     }
   };
 
@@ -226,10 +229,9 @@ const Home = () => {
   const getButtonText = () => {
     const now = new Date();
     const hour = now.getHours();
-    
+
     if (step === 0) {
-      if (hour >= 18 || hour < 10) 
-      {
+      if (hour >= 18 || hour < 12) {
         return "결과보기";
       } else {
         return "시작하기";
@@ -246,18 +248,18 @@ const Home = () => {
   // 입력 필드 포커스 핸들러 개선
   const handleInputFocus = () => {
     // 입력 필드에 포커스가 갈 때 문서 전체 스크롤 잠금
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.style.height = "100%";
     document.body.style.top = `-${window.scrollY}px`;
-    
+
     // 키보드가 열릴 때 컨테이너를 조정하기 위한 딜레이
     setTimeout(() => {
       // 현재 입력 필드로 스크롤
-      const input = document.getElementById('instagram');
+      const input = document.getElementById("instagram");
       if (input) {
-        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     }, 300);
   };
@@ -265,12 +267,12 @@ const Home = () => {
   // 입력 필드가 포커스를 잃을 때 스크롤 잠금 해제를 위한 함수
   const handleInputBlur = () => {
     const scrollY = document.body.style.top;
-    document.body.style.overflow = '';
-    document.body.style.position = '';
-    document.body.style.width = '';
-    document.body.style.height = '';
-    document.body.style.top = '';
-    window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    document.body.style.overflow = "";
+    document.body.style.position = "";
+    document.body.style.width = "";
+    document.body.style.height = "";
+    document.body.style.top = "";
+    window.scrollTo(0, parseInt(scrollY || "0") * -1);
   };
 
   // 다음 단계로 이동
@@ -300,24 +302,21 @@ const Home = () => {
       const timer = setTimeout(() => {
         nextStep(); // 다음 단계로 자동 전환
       }, 1500); // 1.5초 후 실행
-      
+
       return () => clearTimeout(timer); // 컴포넌트 언마운트 시 타이머 제거
     }
   }, [step]); // step이 변경될 때마다 실행
-
 
   return (
     <HomeContainer>
       {/* 모달 컴포넌트 */}
       {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
-      
+
       {/* 시간 안내 모달 추가 */}
-      {showTimeNoticeModal && 
-        <TimeNoticeModal 
-          onClose={() => setShowTimeNoticeModal(false)}
-        />
-      }
-      
+      {showTimeNoticeModal && (
+        <TimeNoticeModal onClose={() => setShowTimeNoticeModal(false)} />
+      )}
+
       {/* step에 따라 다른 화면 표시 */}
       {step === 0 ? (
         <HomeScreen
@@ -351,8 +350,20 @@ const Home = () => {
           {/* 단계 1: 인스타그램 입력 */}
           <StepContainer entering={entering} hidden={step !== 1}>
             <InputContainer>
-              <Label style={{paddingTop:'2rem',paddingBottom: '0',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>인스타그램 아이디</Label>
-              <Label style={{opacity: '0.5'}}htmlFor="instagram">@없이 인스타그램 아이디로 로그인해주세요</Label>
+              <Label
+                style={{
+                  paddingTop: "2rem",
+                  paddingBottom: "0",
+                  fontSize: "28px",
+                  fontWeight: "bold",
+                  textAlign: "left",
+                }}
+              >
+                인스타그램 아이디
+              </Label>
+              <Label style={{ opacity: "0.5" }} htmlFor="instagram">
+                @없이 인스타그램 아이디로 로그인해주세요
+              </Label>
               <Input
                 id="instagram"
                 type="text"
@@ -369,13 +380,36 @@ const Home = () => {
           </StepContainer>
 
           {/* 단계 2: 개인정보 수집동의 */}
-          <StepContainer style={{alignItems: 'flex-start', gap: '0'}} entering={entering} hidden={step !== 2}>
-            <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>개인정보 수집 동의</Label>
-            <Label style={{opacity:'0.5',fontSize: '16px',  textAlign: 'left'}}>원활한 매칭을 위해<br />개인정보 수집 동의가 필요해요</Label>
+          <StepContainer
+            style={{ alignItems: "flex-start", gap: "0" }}
+            entering={entering}
+            hidden={step !== 2}
+          >
+            <Label
+              style={{
+                paddingTop: "2rem",
+                fontSize: "28px",
+                fontWeight: "bold",
+                textAlign: "left",
+              }}
+            >
+              개인정보 수집 동의
+            </Label>
+            <Label
+              style={{ opacity: "0.5", fontSize: "16px", textAlign: "left" }}
+            >
+              원활한 매칭을 위해
+              <br />
+              개인정보 수집 동의가 필요해요
+            </Label>
           </StepContainer>
 
           {/* 단계 3: 성별 선택 */}
-          <StepContainer style= {{paddingLeft: '1rem',alignItems: 'flex-start'}}entering={entering} hidden={step !== 3}>
+          <StepContainer
+            style={{ paddingLeft: "1rem", alignItems: "flex-start" }}
+            entering={entering}
+            hidden={step !== 3}
+          >
             <h2>성별</h2>
             <GenderContainer>
               <GenderButton
@@ -396,20 +430,24 @@ const Home = () => {
           {/* 단계 4: 준비 완료 메시지 - 특별한 애니메이션 적용 */}
           <StepContainer entering={true} hidden={step !== 4}>
             <AnimatedContainer duration="0.8s" delay="0.2s">
-              <div style={{ textAlign: 'center', marginTop: '30%' }}>
-                <h1 style={{ 
-                  fontSize: '36px', 
-                  fontWeight: 'bold', 
-                  marginBottom: '20px',
-                  color: '#28041d'
-                }}>
+              <div style={{ textAlign: "center", marginTop: "30%" }}>
+                <h1
+                  style={{
+                    fontSize: "36px",
+                    fontWeight: "bold",
+                    marginBottom: "20px",
+                    color: "#28041d",
+                  }}
+                >
                   모든 준비 완료!
                 </h1>
-                <p style={{ 
-                  fontSize: '18px', 
-                  color: '#666',
-                  marginTop: '15px'
-                }}>
+                <p
+                  style={{
+                    fontSize: "18px",
+                    color: "#666",
+                    marginTop: "15px",
+                  }}
+                >
                   잠시 후 다음 단계로 이동합니다
                 </p>
               </div>
@@ -417,9 +455,27 @@ const Home = () => {
           </StepContainer>
 
           {/* 단계 5: 이미지 화면 */}
-          <StepContainer style={{alignItems: 'flex-start'}} entering={entering} hidden={step !== 5}>
-          <Label style={{paddingTop:'2rem',fontSize: '28px', fontWeight: 'bold', textAlign: 'left'}}>질문에 대한 답을 <br />선택해주세요</Label>
-          <Label style={{fontSize: '16px',  textAlign: 'left'}}>똑같은 답을 선택한 이성과<br />매칭이 이뤄집니다</Label>
+          <StepContainer
+            style={{ alignItems: "flex-start" }}
+            entering={entering}
+            hidden={step !== 5}
+          >
+            <Label
+              style={{
+                paddingTop: "2rem",
+                fontSize: "28px",
+                fontWeight: "bold",
+                textAlign: "left",
+              }}
+            >
+              질문에 대한 답을 <br />
+              선택해주세요
+            </Label>
+            <Label style={{ fontSize: "16px", textAlign: "left" }}>
+              똑같은 답을 선택한 이성과
+              <br />
+              매칭이 이뤄집니다
+            </Label>
           </StepContainer>
 
           {/* 버튼 컨테이너 */}
